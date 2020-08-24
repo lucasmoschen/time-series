@@ -74,9 +74,10 @@ print(test_sazonality2)
 #print(test_sazonality3)
 
 #4. O R^2 pioroui para esse modelo utilizando a mesma ordem polinomial. Ele parece ter
-#   superestimado os valores intermediários. 
+#   superestimado os valores intermediários. Adicionando +1 às mortes, o resultado ficou 
+#   bem melhor. 
 
-deaths.df$logdeaths = log(deaths.df$deaths + 1e-15)  #somar é interessante? 
+deaths.df$logdeaths = log(deaths.df$deaths + 1)
 model2 <- lm(logdeaths ~ poly(t,3) + g, data = deaths.df)
 summary(model2)
 
