@@ -33,7 +33,7 @@ library(dplyr)
 library(zoo)
 library(forecast)
 
-setwd("~/OneDrive/FGV/Eletivas ou Complementares/Séries Temporais/trabalho1")
+setwd("~/Documents/Github/Time_Series/trabalho1")
 ```
 
 \tiny
