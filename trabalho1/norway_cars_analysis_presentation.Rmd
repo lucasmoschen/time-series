@@ -1,0 +1,71 @@
+---
+title: "Venda de Carros na Noruega"
+author: "Lucas Moschen e Matheus Paes"
+date: "31/08/2020"
+output: beamer_presentation
+---
+
+## TO DO 
+
+2. Extrair a base de vendas mensais relativa a marca escolhida e plote as vendas por mês.
+
+3. Utilize janelas de 2 anos para prever 1 mês a frente [(1)]
+
+4. Utilize um modelo de regressão para prever vendas (e.g., tendência polinomial e dummies sazonais)
+
+5. Utilize um modelo de decomposição (e.g. loess)
+
+6. Utilize um modelo de alisamento exponencial (e.g. exponential smoothing, Holt ou Holt-Winters)
+
+7. Compare as previsões usando o MAPE de cada um dos modelos [(2)]
+
+8. Apresente os plots das previsões 1 passo à frente e a estatística MAPE de cada um dos modelos testados. [(3)]
+
+## Importando os Dados
+
+Primeiro, baixamos os dados e separamos a marca a ser estudada.
+
+\vspace{10pt}
+
+```{r, include = FALSE, message=FALSE }
+#Importando bibliotecas
+library(dplyr)
+library(zoo)
+library(forecast)
+
+setwd("~/OneDrive/FGV/Eletivas ou Complementares/Séries Temporais/trabalho1")
+```
+
+\tiny
+```{r, warning=FALSE, message = FALSE, highlight=TRUE}
+
+cars_df  = read.csv('norway_new_car_sales_by_make.csv')
+make = 'Toyota'
+
+make_df = subset(cars_df, Make == make)
+make_df$Date <- zoo::as.yearmon(paste(make_df$Year, make_df$Month), "%Y %m")
+```
+
+## Série Temporal de Vendas
+
+Podemos ver o gráfico da série.
+
+\tiny
+```{r}
+plot(make_df$Date, make_df$Quantity, xlab = 'Ano', ylab = 'Vendas', 
+     main = 'Vendas de carros da marca Toyota por mês')
+```
+
+## Decomposição STL
+
+Podemos fazer uma decomposição, considerando a janela de 12 meses para verificar tendência e sazonalidade. 
+
+\tiny
+
+```{r, include = FALSE}
+decomposition = stl(zooreg(make_df$Quantity, start = c(2007,1), frequency = 12), s.window = 12)
+```
+
+```{r}
+plot(decomposition)
+```
