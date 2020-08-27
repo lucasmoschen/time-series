@@ -109,3 +109,34 @@ plot(decomposition$trend, xlab = 'Ano', ylab = 'T')
 plot(decomposition$seasonal, xlab = 'Ano', ylab = 'S')
 plot(decomposition$random, xlab = 'Ano', ylab = 'e')
 ```
+
+## Modelo de Regressão (Polinomial + Sazonal (12))
+
+\tiny
+
+```{r, message = FALSE, warning=FALSE}
+D <- factor(cycle(make_df$Date))
+t <- seq(1:length(make_df$Date))
+
+make_df_model <- data.frame(Q = make_df$Quantity, t = t, D = D)
+
+R1 = function(z){
+  j <- nrow(z)-1
+  model <- lm(formula = Q ~ t + D, data = as.data.frame(z)[1:j,])
+  y <- as.data.frame(z)[nrow(z),]
+  yhat <- predict(model, y)
+  ratio <- abs((y$Q - yhat)/y$Q)
+  return(ratio)
+}
+
+width = 25
+mae <- 0
+
+for(i in seq(1,nrow(make_df_model)-width+1)){
+  j <- width + i - 1
+  mae <- mae + R1(make_df_model[i:j,])
+}
+mae <- mae/(nrow(make_df_model)-width+1)
+
+```
+
