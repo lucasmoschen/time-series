@@ -163,14 +163,20 @@ ggplot(mape_poly) +
 
 ## Modelo de Exponencial Smoothing
 
+\tiny
+
 ```{r}
-exp.smooth <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007), beta = F)
+exp.smooth <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007), beta = F, gamma = F)
+plot(exp.smooth$fitted, main= 'Exponencial Smoothing')
 ```
 
 ## Modelo Holt Winters
 
+\tiny
+
 ```{r}
 holt <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007))
+plot(holt$fitted, main = 'Holt Winters')
 ```
 
 ## Comparando modelos 
