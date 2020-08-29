@@ -32,6 +32,7 @@ Primeiro, baixamos os dados e separamos a marca a ser estudada.
 library(dplyr)
 library(zoo)
 library(forecast)
+library(ggplot2)
 
 setwd("~/Documents/GitHub/Time_Series")
 ```
@@ -51,9 +52,13 @@ make_df$Date <- zoo::as.yearmon(paste(make_df$Year, make_df$Month), "%Y %m")
 Podemos ver o gráfico da série.
 
 \tiny
-```{r}
-plot(make_df$Date, make_df$Quantity, xlab = 'Ano', ylab = 'Vendas', 
-     main = 'Vendas de carros da marca Toyota por mês')
+```{r, echo = FALSE}
+ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) + 
+  geom_point() + 
+  labs(title = 'Vendas de carros da marca Toyota por mês', 
+       x = 'Mês/Ano', 
+       y = 'Vendas') + 
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ## Decomposição STL (Loess)
@@ -66,7 +71,7 @@ Podemos fazer uma decomposição, considerando a janela de 12 meses para verific
 decomposition = stl(zooreg(make_df$Quantity, start = c(2007,1), frequency = 12), s.window = 12)
 ```
 
-```{r}
+```{r, echo = FALSE}
 plot(decomposition)
 ```
 
@@ -120,9 +125,9 @@ t <- seq(1:length(make_df$Date))
 
 make_df_model <- data.frame(Q = make_df$Quantity, t = t, D = D)
 
-R1 = function(z){
+MAPE = function(z, degree){
   j <- nrow(z)-1
-  model <- lm(formula = Q ~ t + D, data = as.data.frame(z)[1:j,])
+  model <- lm(formula = Q ~ poly(t, degree) + D, data = as.data.frame(z)[1:j,])
   y <- as.data.frame(z)[nrow(z),]
   yhat <- predict(model, y)
   ratio <- abs((y$Q - yhat)/y$Q)
@@ -130,13 +135,36 @@ R1 = function(z){
 }
 
 width = 25
-mae <- 0
 
-for(i in seq(1,nrow(make_df_model)-width+1)){
-  j <- width + i - 1
-  mae <- mae + R1(make_df_model[i:j,])
+mape_poly <- rep(0, 5)
+for(degree in seq(1,5)){
+  for(i in seq(1, nrow(make_df_model)-width+1)){
+    j <- width + i - 1
+    mape_poly[degree] <- mape_poly[degree] + MAPE(make_df_model[i:j,], degree)
+  }
+  mape_poly[degree] <- mape_poly[degree]/(nrow(make_df_model)-width+1)  
 }
-mae <- mae/(nrow(make_df_model)-width+1)
-
+mape_poly <- data.frame(degree = seq(1,5), MAPE = mape_poly)
 ```
 
+## Modelo de Regressão (Polinomial + Sazonal (12))
+
+Podemos ver o resultado: 
+
+```{r, echo = FALSE, messsage = FALSE}
+ggplot(mape_poly) + 
+  geom_bar( aes(x = degree, y = MAPE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
+  labs(x = 'Ordem polinomial', y = 'MAPE', 
+      title = 'Comparing different polynomial errors') + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Modelo de Decomposição Loess
+
+## Modelo de Exponencial Smoothing
+
+## Modelo Holt Winters
+
+## Comparando modelos 
+
+## Previsões 1 passo a frente 
