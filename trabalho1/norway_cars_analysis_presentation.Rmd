@@ -41,7 +41,7 @@ setwd("~/Documents/GitHub/Time_Series")
 ```{r, warning=FALSE, message = FALSE, highlight=TRUE}
 
 cars_df  = read.csv('norway_new_car_sales_by_make.csv')
-make = 'Toyota'
+make = 'Ford'
 
 make_df = subset(cars_df, Make == make)
 make_df$Date <- zoo::as.yearmon(paste(make_df$Year, make_df$Month), "%Y %m")
@@ -55,7 +55,7 @@ Podemos ver o gráfico da série.
 ```{r, echo = FALSE}
 ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) + 
   geom_point() + 
-  labs(title = 'Vendas de carros da marca Toyota por mês', 
+  labs(title = 'Vendas de carros da marca Ford por mês', 
        x = 'Mês/Ano', 
        y = 'Vendas') + 
   theme(plot.title = element_text(hjust = 0.5))
@@ -129,14 +129,14 @@ MAPE = function(z, degree){
   j <- nrow(z)-1
   model <- lm(formula = Q ~ poly(t, degree) + D, data = as.data.frame(z)[1:j,])
   y <- as.data.frame(z)[nrow(z),]
-  yhat <- predict(model, y)
+    yhat <- predict(model, y)
   ratio <- abs((y$Q - yhat)/y$Q)
   return(ratio)
 }
 
 width = 25
 
-mape_poly <- rep(0, 5)
+  mape_poly <- rep(0, 5)
 for(degree in seq(1,5)){
   for(i in seq(1, nrow(make_df_model)-width+1)){
     j <- width + i - 1
@@ -155,7 +155,7 @@ Podemos ver o resultado:
 ggplot(mape_poly) + 
   geom_bar( aes(x = degree, y = MAPE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Ordem polinomial', y = 'MAPE', 
-      title = 'Comparing different polynomial errors') + 
+      title = 'Comparando MAPE para diferentes polinômios') + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -163,7 +163,15 @@ ggplot(mape_poly) +
 
 ## Modelo de Exponencial Smoothing
 
+```{r}
+exp.smooth <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007), beta = F)
+```
+
 ## Modelo Holt Winters
+
+```{r}
+holt <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007))
+```
 
 ## Comparando modelos 
 
