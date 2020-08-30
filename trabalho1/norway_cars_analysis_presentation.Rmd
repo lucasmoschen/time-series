@@ -172,6 +172,33 @@ plot(exp.smooth$fitted, main= 'Exponencial Smoothing')
 
 ## Modelo Exponencial Smoothing: MAPE
 
+\tiny
+
+```{r}
+es <- function(x){
+  model <- HoltWinters(x, beta = F, gamma = F)
+  coef(model)
+}
+
+make_df.ts <- ts(make_df_model$Q, frequency = 12, start = 2007)
+
+r <- rollapply(make_df.ts, FUN = es, 
+               width = 24, align = 'right')
+
+mape_exp <- mean(abs((make_df.ts - r)/make_df.ts))
+```
+
+## Modelo Exponencial Smoothing: Previsão
+
+\tiny
+
+```{r}
+plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas', 
+                                     main = 'Previsão do Primeiro Passo ES')
+lines(r)
+```
+
+
 ## Modelo Holt Winters
 
 \tiny
@@ -181,6 +208,22 @@ holt <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007))
 plot(holt$fitted, main = 'Holt Winters')
 ```
 
-## Comparando modelos 
+## Modelo Holt Winters: MAPE 
 
-## Previsões 1 passo a frente 
+```{r}
+es <- function(x){
+  model <- HoltWinters(x, gamma = F)
+  coef(model)
+}
+
+make_df.ts <- ts(make_df_model$Q, frequency = 12, start = 2007)
+
+hw <- rollapply(make_df.ts, FUN = es, 
+               width = 24, align = 'right')
+
+mape_hw <- mean(abs((make_df.ts - r)/make_df.ts))
+```
+
+## Modelo Exponencial Smoothing: Previsão
+
+## Comparando modelos 
