@@ -217,3 +217,19 @@ lines(r.h[,1])
 ```
 
 ## Comparando modelos 
+
+```{r, echo=FALSE}
+models = c('Poly 1', 'Poly 2', 'Poly 3', 'Poly 4', 'Poly 5', 
+          'Loess', 'ES', 'Holt')
+mape <- c(mape_poly$MAPE, 0, mape_exp, mape_hw)
+mape_all <- data.frame(Model = models, MAPE = mape)
+
+ggplot(mape_all) + 
+  geom_bar( aes(x = Model, y = MAPE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
+  labs(x = 'Modelos', y = 'MAPE', 
+      title = 'Comparando MAPE para os modelos') + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
