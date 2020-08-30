@@ -5,22 +5,6 @@ date: "31/08/2020"
 output: beamer_presentation
 ---
 
-## TO DO 
-
-2. Extrair a base de vendas mensais relativa a marca escolhida e plote as vendas por mês.
-
-3. Utilize janelas de 2 anos para prever 1 mês a frente [(1)]
-
-4. Utilize um modelo de regressão para prever vendas (e.g., tendência polinomial e dummies sazonais)
-
-5. Utilize um modelo de decomposição (e.g. loess)
-
-6. Utilize um modelo de alisamento exponencial (e.g. exponential smoothing, Holt ou Holt-Winters)
-
-7. Compare as previsões usando o MAPE de cada um dos modelos [(2)]
-
-8. Apresente os plots das previsões 1 passo à frente e a estatística MAPE de cada um dos modelos testados. [(3)]
-
 ## Importando os Dados
 
 Primeiro, baixamos os dados e separamos a marca a ser estudada.
@@ -182,10 +166,10 @@ es <- function(x){
 
 make_df.ts <- ts(make_df_model$Q, frequency = 12, start = 2007)
 
-r <- rollapply(make_df.ts, FUN = es, 
+r.exp <- rollapply(make_df.ts, FUN = es, 
                width = 24, align = 'right')
 
-mape_exp <- mean(abs((make_df.ts - r)/make_df.ts))
+mape_exp <- mean(abs((make_df.ts - r.exp)/make_df.ts))
 ```
 
 ## Modelo Exponencial Smoothing: Previsão
@@ -195,35 +179,41 @@ mape_exp <- mean(abs((make_df.ts - r)/make_df.ts))
 ```{r}
 plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas', 
                                      main = 'Previsão do Primeiro Passo ES')
-lines(r)
+lines(r.exp)
 ```
-
 
 ## Modelo Holt Winters
 
 \tiny
 
 ```{r}
-holt <- HoltWinters(ts(make_df_model, frequency = 12, start = 2007))
+holt <- HoltWinters(make_df.ts)
 plot(holt$fitted, main = 'Holt Winters')
 ```
 
-## Modelo Holt Winters: MAPE 
+## Modelo Holt: MAPE 
+
+\tiny
 
 ```{r}
-es <- function(x){
+h <- function(x){
   model <- HoltWinters(x, gamma = F)
-  coef(model)
+  model$fitted
 }
 
-make_df.ts <- ts(make_df_model$Q, frequency = 12, start = 2007)
+r.h <- rollapply(make_df.ts, FUN = h, width = 24, align = 'right')
 
-hw <- rollapply(make_df.ts, FUN = es, 
-               width = 24, align = 'right')
-
-mape_hw <- mean(abs((make_df.ts - r)/make_df.ts))
+mape_hw <- mean(abs((make_df.ts - r.h[,1])/make_df.ts))
 ```
 
-## Modelo Exponencial Smoothing: Previsão
+## Modelo Holt: Previsão
+
+\tiny
+
+```{r}
+plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas', 
+                                     main = 'Previsão do Primeiro Passo Holt')
+lines(r.h[,1])
+```
 
 ## Comparando modelos 
