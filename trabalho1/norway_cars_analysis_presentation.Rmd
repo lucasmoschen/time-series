@@ -7,7 +7,7 @@ output: beamer_presentation
 
 ## Importando os Dados
 
-Primeiro, baixamos os dados e separamos a marca a ser estudada.
+Primeiro, baixamos os dados e separamos a marca a ser estudada. Nesse caso, consideramos a marca Ford.
 
 \vspace{10pt}
 
@@ -22,8 +22,8 @@ setwd("~/Documents/GitHub/Time_Series")
 ```
 
 \tiny
-```{r, warning=FALSE, message = FALSE, highlight=TRUE}
 
+```{r, warning=FALSE, message = FALSE, highlight=TRUE}
 cars_df  = read.csv('norway_new_car_sales_by_make.csv')
 make = 'Ford'
 
@@ -56,12 +56,12 @@ decomposition = stl(zooreg(make_df$Quantity, start = c(2007,1), frequency = 12),
 ```
 
 ```{r, echo = FALSE}
-plot(decomposition)
+plot(decomposition, main = 'Loess (STL)')
 ```
 
 ## Decompose Aditivo (Moving Average)
 
-Agora, vamos considerar a decomposição com moving average. Modelo aditivo:
+Agora, vamos considerar a decomposição com moving average.
 
 \tiny
 
@@ -73,7 +73,8 @@ decomposition = decompose(zooreg(make_df$Quantity, start = c(2007,1), frequency 
 
 ```{r, echo = FALSE}
 par(mfrow=c(4,1), mai = c(0.1, 0.6, 0.3, 0.1))
-plot(decomposition$x, xlab = 'Ano', ylab = 'Dados')
+plot(decomposition$x, xlab = 'Ano', ylab = 'Dados', 
+     main = 'Moving Average (Aditivo)')
 plot(decomposition$trend, xlab = 'Ano', ylab = 'T')
 plot(decomposition$seasonal, xlab = 'Ano', ylab = 'S')
 plot(decomposition$random, xlab = 'Ano', ylab = 'e')
@@ -109,22 +110,25 @@ t <- seq(1:length(make_df$Date))
 
 make_df_model <- data.frame(Q = make_df$Quantity, t = t, D = D)
 
-MAPE = function(z, degree){
+pm = function(z, degree){
   j <- nrow(z)-1
   model <- lm(formula = Q ~ poly(t, degree) + D, data = as.data.frame(z)[1:j,])
   y <- as.data.frame(z)[nrow(z),]
-    yhat <- predict(model, y)
-  ratio <- abs((y$Q - yhat)/y$Q)
-  return(ratio)
+  yhat <- predict(model, y)
+  return(yhat)
 }
 
 width = 25
 
-  mape_poly <- rep(0, 5)
+mape_poly <- rep(0, 5)
+yhat <- matrix(nrow = nrow(make_df_model)-width+1, ncol = 5)
 for(degree in seq(1,5)){
   for(i in seq(1, nrow(make_df_model)-width+1)){
     j <- width + i - 1
-    mape_poly[degree] <- mape_poly[degree] + MAPE(make_df_model[i:j,], degree)
+    y <- make_df_model[i:j,]
+    yhat[i,degree] <- pm(y, degree)
+    y <- make_df_model[j,1]
+    mape_poly[degree] <- mape_poly[degree] + abs((y - yhat[i,degree])/y)
   }
   mape_poly[degree] <- mape_poly[degree]/(nrow(make_df_model)-width+1)  
 }
@@ -143,7 +147,30 @@ ggplot(mape_poly) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## Modelo de Decomposição Loess
+## Modelo de Regressão (Polinomial + Sazonal (12)): Previsão
+
+```{r, echo = F}
+poly_prevision <- data.frame(yhat)
+poly_prevision$index <- make_df[25:nrow(make_df),]$Date
+
+ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) + 
+  geom_point() + 
+  labs(title = 'Modelo Polinomial', 
+       x = 'Mês/Ano', 
+       y = 'Vendas',
+       color = 'Legend') + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X1), 
+            color = 'red', linetype = "dashed") + 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X2),
+            color = 'blue', linetype = "dotted") + 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X3), 
+            color = 'green', linetype = "twodash") + 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X4), 
+            color = 'orange', linetype = "dotdash") +
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X5), 
+            alpha = 0.3) 
+```
 
 ## Modelo Exponencial Smoothing
 
@@ -176,17 +203,17 @@ mape_exp <- mean(abs((make_df.ts - r.exp)/make_df.ts))
 
 \tiny
 
-```{r}
+```{r, echo = F}
 plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas', 
                                      main = 'Previsão do Primeiro Passo ES')
 lines(r.exp)
 ```
 
-## Modelo Holt Winters
+## Modelo Holt Winters Aditivo
 
 \tiny
 
-```{r}
+```{r, echo = F}
 holt <- HoltWinters(make_df.ts)
 plot(holt$fitted, main = 'Holt Winters')
 ```
@@ -220,8 +247,8 @@ lines(r.h[,1])
 
 ```{r, echo=FALSE}
 models = c('Poly 1', 'Poly 2', 'Poly 3', 'Poly 4', 'Poly 5', 
-          'Loess', 'ES', 'Holt')
-mape <- c(mape_poly$MAPE, 0, mape_exp, mape_hw)
+          'ES', 'Holt')
+mape <- c(mape_poly$MAPE, mape_exp, mape_hw)
 mape_all <- data.frame(Model = models, MAPE = mape)
 
 ggplot(mape_all) + 
