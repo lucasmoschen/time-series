@@ -39,6 +39,7 @@ Podemos ver o gráfico da série.
 ```{r, echo = FALSE}
 ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) + 
   geom_point() + 
+  geom_smooth(formula = y ~ x, method = 'loess') + 
   labs(title = 'Vendas de carros da marca Ford por mês', 
        x = 'Mês/Ano', 
        y = 'Vendas') + 
@@ -47,7 +48,7 @@ ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) +
 
 ## Decomposição STL (Loess)
 
-Podemos fazer uma decomposição, considerando a janela de 12 meses para verificar tendência e sazonalidade. 
+Podemos fazer uma decomposição, considerando a janela de 12 meses para verificar tendência e sazonalidade. É um bom chute inicial para entender a série.
 
 \tiny
 
@@ -61,7 +62,7 @@ plot(decomposition, main = 'Loess (STL)')
 
 ## Decompose Aditivo (Moving Average)
 
-Agora, vamos considerar a decomposição com moving average.
+Agora, vamos considerar a decomposição com moving average. 
 
 \tiny
 
@@ -82,8 +83,6 @@ plot(decomposition$random, xlab = 'Ano', ylab = 'e')
 
 ## Decompose Multiplicativo (Moving Average)
 
-Modelo multiplicativo:
-
 \tiny
 
 ```{r, include = FALSE}
@@ -101,6 +100,8 @@ plot(decomposition$random, xlab = 'Ano', ylab = 'e')
 ```
 
 ## Modelo de Regressão (Polinomial + Sazonal (12))
+
+Utilizarei polinômios de ordem 1 até 5 para avaliar. Modelos lineares e polinomias são os mais básicos para serem testados. 
 
 \tiny
 
@@ -136,6 +137,7 @@ mape_poly <- data.frame(degree = seq(1,5), MAPE = mape_poly)
 ```
 
 ## Modelo de regressão com tendência polinomial e dummies sazonais
+
 \tiny
 ```{r, warning=FALSE, highlight=TRUE}
 qtd <- zooreg(make_df$Quantity, frequency = 12, start = c(2007,1))
@@ -170,21 +172,20 @@ ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) +
   labs(title = 'Modelo Polinomial', 
        x = 'Mês/Ano', 
        y = 'Vendas',
-       color = 'Legend') + 
+       colour = 'Legend') + 
   theme(plot.title = element_text(hjust = 0.5)) + 
-  geom_line(data = poly_prevision, mapping = aes(x = index, y = X1), 
-            color = 'red', linetype = "dashed") + 
-  geom_line(data = poly_prevision, mapping = aes(x = index, y = X2),
-            color = 'blue', linetype = "dotted") + 
-  geom_line(data = poly_prevision, mapping = aes(x = index, y = X3), 
-            color = 'green', linetype = "twodash") + 
-  geom_line(data = poly_prevision, mapping = aes(x = index, y = X4), 
-            color = 'orange', linetype = "dotdash") +
-  geom_line(data = poly_prevision, mapping = aes(x = index, y = X5), 
-            alpha = 0.3) 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X1, color = '1'), 
+            linetype = "dashed") + 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X2, color = '2'),
+            linetype = "dotted") + 
+  geom_line(data = poly_prevision, mapping = aes(x = index, y = X3, color = '3'), 
+            alpha = 0.5) + 
+  scale_color_manual(values = c("blue","red", "green")) + 
+  guides(fill=guide_legend(ncol=3), label = TRUE) + 
+  theme(legend.position = c(0, 1),legend.justification = c(0, 1))
 ```
 
-## Modelo Exponencial Smoothing
+## Modelo Exponencial Smoothing (Toda série)
 
 \tiny
 
@@ -206,22 +207,9 @@ es <- function(x){
 make_df.ts <- ts(make_df_model$Q, frequency = 12, start = 2007)
 
 r.exp <- rollapply(make_df.ts, FUN = es, 
-               width = 24, align = 'right')
+                   width = 24, align = 'right')
 
 mape_exp <- mean(abs((make_df.ts - r.exp)/make_df.ts))
-```
-
-## Previsão 1 mês a frente com janelas de 2 anos
-
-\tiny
-```{r, warning=FALSE, message=FALSE, highlight=TRUE, results="hide"}
-estim <- function(v_window) {
-  es1 <- HoltWinters(v_window, beta=F, gamma=F)
-  as.numeric(forecast(es1,1)$mean)
-}
-
-yhat <- rollapply(qtd,24,estim)
-yhat <- zooreg(yhat, frequency = 12, start = c(2009,1), end = c(2017,2))
 ```
 
 ## Modelo Exponencial Smoothing: Previsão
@@ -234,7 +222,7 @@ plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas
 lines(r.exp)
 ```
 
-## Modelo Holt Winters Aditivo
+## Modelo Holt Winters Aditivo (Toda série)
 
 \tiny
 
@@ -250,7 +238,6 @@ plot(holt$fitted, main = 'Holt Winters')
 ```{r}
 h <- function(x){
   model <- HoltWinters(x, gamma = F)
-  model$fitted
 }
 
 r.h <- rollapply(make_df.ts, FUN = h, width = 24, align = 'right')
@@ -268,12 +255,37 @@ plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas
 lines(r.h[,1])
 ```
 
+## Modelo Holt Winters (Multiplicativo): MAPE 
+
+\tiny
+
+```{r}
+h2 <- function(x){
+  model <- HoltWinters(ts(x, frequency = 12), seasonal = 'multiplicative')
+  model$fitted
+}
+
+r.h2 <- rollapply(make_df.ts, FUN = h2, width = 24, align = 'right')
+
+mape_hw2 <- mean(abs((make_df.ts - r.h2[,1])/make_df.ts))
+```
+
+## Modelo Holt: Previsão
+
+\tiny
+
+```{r}
+plot(make_df$Date, make_df$Quantity, xlab = 'Anos', ylab = 'Quantidade de vendas', 
+                                     main = 'Previsão do Primeiro Passo Holt')
+lines(r.h2[,1])
+```
+
 ## Comparando modelos 
 
 ```{r, echo=FALSE}
 models = c('Poly 1', 'Poly 2', 'Poly 3', 'Poly 4', 'Poly 5', 
-          'ES', 'Holt')
-mape <- c(mape_poly$MAPE, mape_exp, mape_hw)
+          'ES', 'Holt', 'Holt Winters')
+mape <- c(mape_poly$MAPE, mape_exp, mape_hw, mape_hw2)
 mape_all <- data.frame(Model = models, MAPE = mape)
 
 ggplot(mape_all) + 
