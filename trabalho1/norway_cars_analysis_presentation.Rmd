@@ -45,48 +45,6 @@ ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## Previsão 1 mês a frente com janelas de 2 anos
-\tiny
-```{r, warning=FALSE, message=FALSE, highlight=TRUE, results="hide"}
-qtd <- zooreg(make_df$Quantity, frequency = 12, start = c(2007,1))
-
-estim <- function(v_window) {
-  es1 <- HoltWinters(v_window, beta=F, gamma=F)
-  as.numeric(forecast(es1,1)$mean)
-}
-
-yhat <- rollapply(qtd,24,estim)
-yhat <- zooreg(yhat, frequency = 12, start = c(2009,1), end = c(2017,2))
-yhat
-```
-
-## Previsão 1 mês a frente com janelas de 2 anos
-\tiny
-```{r, echo = FALSE}
-qtd <- zooreg(make_df$Quantity, frequency = 12, start = c(2007,1))
-
-estim <- function(v_window) {
-  es1 <- HoltWinters(v_window, beta=F, gamma=F)
-  as.numeric(forecast(es1,1)$mean)
-}
-
-yhat <- rollapply(qtd,24,estim)
-yhat <- zooreg(yhat, frequency = 12, start = c(2009,1), end = c(2017,2))
-yhat
-```
-
-## Modelo de regressão com tendência polinomial e dummies sazonais
-\tiny
-```{r, warning=FALSE, highlight=TRUE}
-Q <- factor(cycle(qtd))
-t <- c(1:length(qtd))
-make_df.new <- data.frame(Quantity=qtd, t, Q)
-mod <- lm(Quantity~poly(t,3)+Q, data = make_df.new)
-zhat <- predict(mod, newdata = data.frame(t=t[length(t)]+c(1,2,3), Q=levels(Q)[1:3]))
-zhat
-```
-
-
 ## Decomposição STL (Loess)
 
 Podemos fazer uma decomposição, considerando a janela de 12 meses para verificar tendência e sazonalidade. 
@@ -177,6 +135,18 @@ for(degree in seq(1,5)){
 mape_poly <- data.frame(degree = seq(1,5), MAPE = mape_poly)
 ```
 
+## Modelo de regressão com tendência polinomial e dummies sazonais
+\tiny
+```{r, warning=FALSE, highlight=TRUE}
+qtd <- zooreg(make_df$Quantity, frequency = 12, start = c(2007,1))
+Q <- factor(cycle(qtd))
+t <- c(1:length(qtd))
+make_df.new <- data.frame(Quantity=qtd, t, Q)
+mod <- lm(Quantity~poly(t,3)+Q, data = make_df.new)
+zhat <- predict(mod, newdata = data.frame(t=t[length(t)]+c(1,2,3), Q=levels(Q)[1:3]))
+zhat
+```
+
 ## Modelo de Regressão (Polinomial + Sazonal (12))
 
 Podemos ver o resultado: 
@@ -239,6 +209,19 @@ r.exp <- rollapply(make_df.ts, FUN = es,
                width = 24, align = 'right')
 
 mape_exp <- mean(abs((make_df.ts - r.exp)/make_df.ts))
+```
+
+## Previsão 1 mês a frente com janelas de 2 anos
+
+\tiny
+```{r, warning=FALSE, message=FALSE, highlight=TRUE, results="hide"}
+estim <- function(v_window) {
+  es1 <- HoltWinters(v_window, beta=F, gamma=F)
+  as.numeric(forecast(es1,1)$mean)
+}
+
+yhat <- rollapply(qtd,24,estim)
+yhat <- zooreg(yhat, frequency = 12, start = c(2009,1), end = c(2017,2))
 ```
 
 ## Modelo Exponencial Smoothing: Previsão
