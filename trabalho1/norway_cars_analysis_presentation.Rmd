@@ -18,7 +18,7 @@ library(zoo)
 library(forecast)
 library(ggplot2)
 
-setwd("~/Documents/GitHub/Time_Series")
+#setwd("~/Documents/GitHub/Time_Series")
 ```
 
 \tiny
@@ -47,7 +47,7 @@ ggplot(data = make_df, mapping = aes(x = Date, y = Quantity)) +
 
 ## Previsão 1 mês a frente com janelas de 2 anos
 \tiny
-```{r, warning=FALSE, highlight=TRUE}
+```{r, warning=FALSE, message=FALSE, highlight=TRUE, results="hide"}
 qtd <- zooreg(make_df$Quantity, frequency = 12, start = c(2007,1))
 
 estim <- function(v_window) {
@@ -60,6 +60,20 @@ yhat <- zooreg(yhat, frequency = 12, start = c(2009,1), end = c(2017,2))
 yhat
 ```
 
+## Previsão 1 mês a frente com janelas de 2 anos
+\tiny
+```{r, echo = FALSE}
+qtd <- zooreg(make_df$Quantity, frequency = 12, start = c(2007,1))
+
+estim <- function(v_window) {
+  es1 <- HoltWinters(v_window, beta=F, gamma=F)
+  as.numeric(forecast(es1,1)$mean)
+}
+
+yhat <- rollapply(qtd,24,estim)
+yhat <- zooreg(yhat, frequency = 12, start = c(2009,1), end = c(2017,2))
+yhat
+```
 
 ## Modelo de regressão com tendência polinomial e dummies sazonais
 \tiny
