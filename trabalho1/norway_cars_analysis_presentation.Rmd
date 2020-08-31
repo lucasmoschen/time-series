@@ -238,6 +238,7 @@ plot(holt$fitted, main = 'Holt Winters')
 ```{r}
 h <- function(x){
   model <- HoltWinters(x, gamma = F)
+  model$fitted
 }
 
 r.h <- rollapply(make_df.ts, FUN = h, width = 24, align = 'right')
