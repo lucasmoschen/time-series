@@ -5,7 +5,7 @@ library(zoo)
 library(forecast)
 library(ggplot2)
 
-#setwd("~/Documents/GitHub/Time_Series")
+setwd("~/Documents/GitHub/Time_Series/trabalho1")
 
 
 ## ---- warning=FALSE, message = FALSE, highlight=TRUE----------------------------------------------
