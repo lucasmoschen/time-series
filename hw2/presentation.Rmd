@@ -15,4 +15,12 @@ setwd('/home/lucasmoschen/Documents/GitHub/Time_Series/hw2')
 load('data/dados_arma_2.RData')
 ```
 
-## Slide 2
+## Série 1
+
+\tiny
+
+```{r}
+serie1 = X[[1]]
+plot(serie1)
+```
+
