@@ -24,3 +24,15 @@ serie1 = X[[1]]
 plot(serie1)
 ```
 
+## Série 2
+
+\tiny
+
+```{r}
+serie2 = X[[4]]
+plot(serie2)
+```
+
+## Metodologia 
+
+
