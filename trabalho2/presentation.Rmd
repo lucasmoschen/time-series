@@ -1,0 +1,14 @@
+---
+title: "Identificação de Modelos ARMA(p,q)"
+author: "Lucas Resck e Lucas Moschen"
+date: \today
+output: beamer_presentation
+---
+
+## Slide 1
+
+
+## Slide 2
+
+
+
