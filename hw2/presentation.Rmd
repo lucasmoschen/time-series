@@ -11,24 +11,52 @@ output: beamer_presentation
 load('data/dados_arma_2.RData')
 ```
 
-## Série 1
+## Metodologia
 
-\tiny
+- Olhar para ACF e PACF segundo a tabela: 
 
-```{r}
-serie1 = X[[1]]
-plot(serie1)
+|Modelo|ACF|PACF|
+|------|---|----|
+|AR(p)|Decai exp|Corte $>p$|
+|MA(q)|Corte $>q$|Decai exp|
+|ARMA(p,q)|Decai exp $>q-p$|Decai exp|
+ 
+## Série 4
+
+```{r, echo = F}
+plot(X[[4]])
 ```
 
-## Série 2
+## ACF e PACF
 
-\tiny
-
-```{r}
-serie2 = X[[4]]
-plot(serie2)
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[4]])
+pacf(X[[4]])
 ```
 
-## Metodologia 
+## MA(1)
 
+- Podemos observar que a PACF tem decaimento exponencial
+- Pelo gráfico a ACF tem corte para $\text{lag}>1$
+- Propomos $MA(1)$ 
 
+## Série 9
+
+```{r, echo = F}
+plot(X[[1]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[9]])
+pacf(X[[9]])
+```
+
+## MA(2)
+
+- Podemos observar que há um corte na ACF quando $q > 2$
+- A PACF tem decaimento exponencial 
+- Propomos $MA(2)$

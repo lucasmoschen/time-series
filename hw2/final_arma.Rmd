@@ -1,0 +1,206 @@
+---
+title: "Identificação de Modelos ARMA(p,q)"
+author: "Lucas Resck e Lucas Moschen"
+date: \today
+output: beamer_presentation
+---
+
+## Importando dados
+
+```{r}
+load('data/dados_arma_2.RData')
+```
+
+## Metodologia
+
+- Olhar para ACF e PACF segundo a tabela: 
+
+|Modelo|ACF|PACF|
+|------|---|----|
+|AR(p)|Decai exp|Corte $>p$|
+|MA(q)|Corte $>q$|Decai exp|
+|ARMA(p,q)|Decai exp $>q-p$|Decai exp|
+ 
+
+## Série 1
+
+```{r, echo = F}
+plot(X[[1]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[1]])
+pacf(X[[1]])
+```
+
+## ARMA(1,2)
+
+- Podemos observar que ambos os gráficos tem decaimento exponencial. 
+- Pela ACF, $q - p = 1$. 
+- Pelo gráfico, não podemos afirmar mais. 
+- Propomos $ARMA(1,2)$ 
+
+## Série 2
+
+```{r, echo = F}
+plot(X[[2]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[2]])
+pacf(X[[2]])
+```
+
+## MA(0)
+
+- Podemos observar que há um corte na ACF quando $q > 0$
+- Propomos $MA(0)$
+
+## Série 3
+
+```{r, echo = F}
+plot(X[[3]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[3]])
+pacf(X[[3]])
+```
+
+## ARMA(1,2)
+
+- Podemos observar que ambos os gráficos tem decaimento exponencial. 
+- Pela ACF, $q - p = 1$. 
+- Pelo gráfico, não podemos afirmar mais. 
+- Propomos $ARMA(1,2)$ 
+
+## Série 4
+
+```{r, echo = F}
+plot(X[[4]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[4]])
+pacf(X[[4]])
+```
+
+## MA(1)
+
+- Podemos observar que a PACF tem decaimento exponencial
+- Pelo gráfico a ACF tem corte para $\text{lag}>1$
+- Propomos $MA(1)$ 
+
+## Série 5
+
+```{r, echo = F}
+plot(X[[5]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[5]])
+pacf(X[[5]])
+```
+
+## MA(0)
+
+- Podemos observar que há um corte na ACF quando $q > 0$
+- Propomos $MA(0)$
+
+## Série 6
+
+```{r, echo = F}
+plot(X[[6]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[6]])
+pacf(X[[6]])
+```
+
+## ARMA(1,1)
+
+- Podemos observar que ambos os gráficos tem decaimento exponencial. 
+- Pela ACF, $q - p = 0$. 
+- Pelo gráfico, não podemos afirmar mais. 
+- Propomos $ARMA(1,1)$ 
+
+## Série 7
+
+```{r, echo = F}
+plot(X[[7]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[7]])
+pacf(X[[7]])
+```
+
+## ARMA(1,1)
+
+- Podemos observar que ambos os gráficos tem decaimento exponencial. 
+- Pela ACF, $q - p = 0$. 
+- Pelo gráfico, não podemos afirmar mais. 
+- Propomos $ARMA(1,1)$ 
+
+## Série 8
+
+```{r, echo = F}
+plot(X[[8]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[8]])
+pacf(X[[8]])
+```
+
+## MA(0)
+
+- Podemos observar que há um corte na ACF quando $q > 0$
+- Propomos $MA(0)$
+
+## Série 9
+
+```{r, echo = F}
+plot(X[[1]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[9]])
+pacf(X[[9]])
+```
+
+## MA(2)
+
+- Podemos observar que há um corte na ACF quando $q > 2$
+- A PACF tem decaimento exponencial 
+- Propomos $MA(2)$
+
+
