@@ -5,10 +5,6 @@ date: \today
 output: beamer_presentation
 ---
 
-```{r, echo =FALSE}
-setwd('/home/lucasmoschen/Documents/GitHub/Time_Series/hw2')
-```
-
 ## Importando dados
 
 ```{r}
