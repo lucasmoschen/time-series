@@ -1,0 +1,83 @@
+---
+title: "Identificação de Modelos ARMA(p,q)"
+author: "Lucas Resck e Lucas Moschen"
+date: \today
+output: beamer_presentation
+---
+
+## Importando dados
+
+```{r}
+load('data/stuff.RData')
+```
+
+## Metodologia
+
+- Olhar para ACF e PACF segundo a tabela: 
+
+|Modelo|ACF|PACF|
+|------|---|----|
+|AR(p)|Decai exp|Corte $>p$|
+|MA(q)|Corte $>q$|Decai exp|
+|ARMA(p,q)|Decai exp $>q-p$|Decai exp|
+
+- Olhar coeficientes dos modelos;
+- Olhar ACF e PACF dos resíduos.
+ 
+
+## Série 1
+
+```{r, echo = F}
+plot(X[[1]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[1]])
+pacf(X[[1]])
+```
+
+## MA(1)
+
+```{r, echo = F}
+fit <- arima(X[[1]], order = c(0,0,1))
+par(mfrow = c(1,2))
+acf(fit$residuals)
+pacf(fit$residuals)
+```
+
+## MA(1)
+
+\tiny
+
+```{r}
+fit
+```
+
+
+## ARMA(1,1)
+
+```{r, echo  = F}
+fit <- arima(X[[1]], order = c(1,0,1))
+par(mfrow = c(1,2))
+acf(fit$residuals)
+pacf(fit$residuals)
+```
+
+## ARMA(1,1)
+
+\tiny
+
+```{r}
+fit
+```
+
+## Modelo
+
+- Podemos observar que ambos os gráficos tem decaimento exponencial. 
+- Pela ACF, $q - p = 0$. 
+- Notamos que MA(1) também é um bom modelo.
+- O coeficiente de AR é pequeno em relação ao do MA.
+- Propomos $ARMA(1,1)$ 

@@ -26,18 +26,20 @@ gen.coef <- function(n, im = 0) {
 }
 
 
-set.seed(14092020)
+set.seed(2100)
 X<-list()
 for(i in 1:9){
-  p=q=0;
+  p=q=0
   while( p+q > 5 || p+q ==0 ){
     p <- rgeom(1,.4) 
     q <- rgeom(1,.4)
   } 
-  coef.ma <- gen.coef(q,-1)[[1]]
-  coef.ar <- gen.coef(p,-1)[[1]]
+  coef.ma <- gen.coef(q,0)[[1]]
+  coef.ar <- gen.coef(p,0)[[1]]
   n = 50+rgeom(1,.008)
-  X[[i]] <- arima.sim(model = list(ma=coef.ma), n = n)
-  #cat(n,'p =',p,coef.ar,'q =',q,coef.ma,'\n')
+  X[[i]] <- arima.sim(model = list(ma=coef.ma, ar = coef.ar), n = n)
+  cat(n,'p =',p,coef.ar,'q =',q,coef.ma,'\n')
 }
+
+
 
