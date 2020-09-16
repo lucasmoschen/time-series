@@ -8,7 +8,7 @@ output: beamer_presentation
 ## Importando dados
 
 ```{r}
-load('data/stuff.RData')
+load('data/class_data.RData')
 ```
 
 ## Metodologia
@@ -81,3 +81,59 @@ fit
 - Notamos que MA(1) também é um bom modelo.
 - O coeficiente de AR é pequeno em relação ao do MA.
 - Propomos $ARMA(1,1)$ 
+
+## Série 2
+
+```{r, echo = F}
+plot(X[[2]])
+```
+
+## ACF e PACF
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(X[[2]])
+pacf(X[[2]])
+```
+
+## AR(1)
+
+```{r, echo = F}
+fit <- arima(X[[2]], order = c(1,0,0))
+par(mfrow = c(1,2))
+acf(fit$residuals)
+pacf(fit$residuals)
+```
+
+## AR(1)
+
+\tiny
+
+```{r}
+fit
+```
+
+
+## ARMA(2,1)
+
+```{r, echo  = F}
+fit <- arima(X[[2]], order = c(2,0,1))
+par(mfrow = c(1,2))
+acf(fit$residuals)
+pacf(fit$residuals)
+```
+
+## ARMA(2,1)
+
+\tiny
+
+```{r}
+fit
+```
+
+## Modelo
+
+- Podemos observar que o primeiro gráfico tem decaimento exponencial
+- Podemos observar que a PACF após o corte de lag 1
+- Logo propomos $AR(1)$
+- O modelo $ARMA(2,1)$ poderia também ser uma boa opção. 
