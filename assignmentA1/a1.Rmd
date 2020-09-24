@@ -1,0 +1,57 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Predicting O3 in Boston
+
+## Load and visualize
+
+```{r}
+bos = read.csv("data/BOS.csv")
+plot(bos$Date.Local, bos$O3.Mean)
+```
+
+## Data treatment
+
+```{r}
+sum(is.na(bos$O3.Mean))
+```
+
+```{r}
+bos$Date.Local[duplicated(bos$Date.Local)]
+bos[bos$Date.Local %in% c("2002-06-08", "2002-06-09", "2002-06-10"),]
+```
+
+
+```{r}
+library(dplyr)
+bos[413, "O3.Mean"] = mean(bos[bos$Date.Local == "2002-06-09",]$O3.Mean)
+bos = distinct(bos, Date.Local, .keep_all = TRUE)
+```
+
+```{r}
+bos[bos$Date.Local %in% c("2002-06-08", "2002-06-09", "2002-06-10"),]
+```
+
+```{r}
+library(zoo)
+o3 = zooreg(bos$O3.Mean, order.by = as.Date(as.character(bos$Date.Local), format = "%Y-%m-%d"))
+plot(o3)
+```
+
+```{r}
+o3_train = bos[1:(dim(bos)[1] - 365),]
+o3_test = bos[(dim(bos)[1] - 365 + 1):dim(bos)[1],]
+```
+
+## Models
+
+### Regression
+
+### Decompose
+
+### Holt-Winters
+
+### ARMA
+
