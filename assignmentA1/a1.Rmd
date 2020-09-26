@@ -1,18 +1,32 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Prediction of ozone level in Boston"
+author: 
+- Lucas Emanuel Resck Domingues
+- Lucas Machado Moscheb^[Escola de Matemática Aplicada]
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 # Predicting O3 in Boston
 
+```{r echo = F, warning = F}
+library(zoo)
+library(dplyr)
+```
+
+
 ## Load and visualize
 
-```{r}
+```{r, echo = F}
 bos = read.csv("data/BOS.csv")
-plot(bos$Date.Local, bos$O3.Mean)
+plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston', 
+                                  xlab = 'Date', ylab = 'Kg/m3')
 ```
 
 ## Data treatment
+
+We found that no NaN value exist in the dataset. However there was duplicated days. Comparing with the neighbors, we saw that the mean of the two values would be a good option.  
 
 ```{r}
 sum(is.na(bos$O3.Mean))
@@ -24,32 +38,35 @@ bos[bos$Date.Local %in% c("2002-06-08", "2002-06-09", "2002-06-10"),]
 ```
 
 
-```{r}
-library(dplyr)
+```{r, echo = F}
 bos[413, "O3.Mean"] = mean(bos[bos$Date.Local == "2002-06-09",]$O3.Mean)
 bos = distinct(bos, Date.Local, .keep_all = TRUE)
 ```
 
-```{r}
+```{r, echo = F}
 bos[bos$Date.Local %in% c("2002-06-08", "2002-06-09", "2002-06-10"),]
 ```
 
-```{r}
-library(zoo)
+We use the Zoo library handle the data from now on. We also separate the train and test (last 365 days). ´
+
+```{r, echo = F}
 o3 = zooreg(bos$O3.Mean, order.by = as.Date(as.character(bos$Date.Local), format = "%Y-%m-%d"))
-plot(o3)
+plot(o3, main = 'Daily average level of O3 in Boston', 
+                                  xlab = 'Date', )
 ```
 
-```{r}
+```{r, echo= F}
 o3_train = bos[1:(dim(bos)[1] - 365),]
 o3_test = bos[(dim(bos)[1] - 365 + 1):dim(bos)[1],]
 ```
 
 ## Models
 
-### Regression
+Now we develop some models using the train data.
 
 ### Decompose
+
+### Regression
 
 ### Holt-Winters
 
