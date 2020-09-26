@@ -15,6 +15,7 @@ library(zoo)
 library(dplyr)
 library(forecast)
 library(tseries)
+library(bnstruct)
 ```
 
 
@@ -48,12 +49,22 @@ bos[413, "O3.Mean"] = mean(bos[bos$Date.Local == toString(day),]$O3.Mean)
 bos <- distinct(bos, Date.Local, .keep_all = TRUE)
 ```
 
-We use `zoo` and `tseries` libraries in order to handle the data from now on. We also separate the train and test (last 365 days).
+The rate of NA values is almost 5% of the dataset. 
 
 ```{r, echo = F}
 o3 <- zooreg(bos$O3.Mean, order.by = as.Date(as.character(bos$Date.Local), format = "%Y-%m-%d"))
 o3.ts <- as.ts(o3)
+
+print(sum(is.na(o3.ts))/length(o3.ts))
 ```
+
+So as to solve that problem, we make a knn imputation using the month ($k = 30$)
+
+```{r}
+o3.clean <- knn.impute(as.matrix(o3.ts), k = 30)
+o3.clean <- as.ts(o3.clean)
+```
+
 
 ```{r, echo= F}
 o3_train = o3[1:(length(o3)[1] - 365),]
@@ -66,7 +77,7 @@ Now we develop some models using the train data.
 
 The metric to compare is the Mean Absolute Error (MAE) in the predictions: 
 
-```{r, echo=F}
+```{r}
 mae <- function(error)
 {
     mean(abs(error))
