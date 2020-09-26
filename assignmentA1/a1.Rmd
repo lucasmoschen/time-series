@@ -63,6 +63,8 @@ So as to solve that problem, we make a knn imputation using the month ($k = 30$)
 ```{r}
 o3.clean <- knn.impute(as.matrix(o3.ts), k = 30)
 o3.clean <- as.ts(o3.clean)
+plot(o3.clean, main = 'Daily average level of O3 in Boston (after imputation)', 
+                xlab = 'Date', ylab = 'Kg/m3')
 ```
 
 
@@ -78,19 +80,30 @@ Now we develop some models using the train data.
 The metric to compare is the Mean Absolute Error (MAE) in the predictions: 
 
 ```{r}
-mae <- function(error)
+mae <- function(ytrue, ypred)
 {
-    mean(abs(error))
+    return(mean(abs(ytrue - ypred)))
 }
 ```
 
 ### Decompose
 
-```{r, echo=F}
-# STL work only with tseries object 
-#loess_model <- slt()
+```{r}
+n <- length(o3_train)
+t <- seq(1,n)
+size <- 2*365 + 7 + 1
 ```
 
+
+```{r, echo=F}
+stl_model_day <- function(t) {
+  model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = 365), s.window = "periodic")
+  prediction = forecast(model, h=7)
+  return(as.numeric(prediction$mean))
+}
+prediction = rollapply(t, width = size, stl_model_day)
+stl_mae <- mae(o3_train[size:n], prediction[,7])
+```
 
 ### Regression
 
