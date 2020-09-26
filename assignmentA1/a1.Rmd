@@ -13,6 +13,7 @@ output:
 ```{r echo = F, warning = F}
 library(zoo)
 library(dplyr)
+library(forecast)
 ```
 
 
@@ -63,6 +64,15 @@ o3_test = bos[(dim(bos)[1] - 365 + 1):dim(bos)[1],]
 ## Models
 
 Now we develop some models using the train data.
+
+The metric to compare is the Mean Absolute Error (MAE) in the predictions: 
+
+```{r, echo=F}
+mae <- function(error)
+{
+    mean(abs(error))
+}
+```
 
 ### Decompose
 
