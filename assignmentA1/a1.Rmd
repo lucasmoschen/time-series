@@ -67,8 +67,8 @@ o3.clean <- as.ts(o3.clean)
 
 
 ```{r, echo= F}
-o3_train = o3[1:(length(o3)[1] - 365),]
-o3_test = o3[(length(o3)[1] - 365 + 1):length(o3)[1],]
+o3_train = o3.clean[1:(length(o3)[1] - 365),]
+o3_test = o3.clean[(length(o3)[1] - 365 + 1):length(o3)[1],]
 ```
 
 ## Models
