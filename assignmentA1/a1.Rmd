@@ -10,10 +10,11 @@ output:
 
 # Predicting O3 in Boston
 
-```{r echo = F, warning = F}
+```{r echo = F, warning = F, message=F}
 library(zoo)
 library(dplyr)
 library(forecast)
+library(tseries)
 ```
 
 
@@ -27,38 +28,36 @@ plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston',
 
 ## Data treatment
 
-We found that no NaN value exist in the dataset. However there was duplicated days. Comparing with the neighbors, we saw that the mean of the two values would be a good option.  
-
-```{r}
-sum(is.na(bos$O3.Mean))
-```
-
-```{r}
-bos$Date.Local[duplicated(bos$Date.Local)]
-bos[bos$Date.Local %in% c("2002-06-08", "2002-06-09", "2002-06-10"),]
-```
-
+We noticed that some days do not exist in the dataset, for example, the day August 31, 2001 does not have information in the dataset. 
 
 ```{r, echo = F}
-bos[413, "O3.Mean"] = mean(bos[bos$Date.Local == "2002-06-09",]$O3.Mean)
-bos = distinct(bos, Date.Local, .keep_all = TRUE)
+bos[148:153,]
 ```
 
-```{r, echo = F}
-bos[bos$Date.Local %in% c("2002-06-08", "2002-06-09", "2002-06-10"),]
+Also, there is duplicated days, as June 9, 2002: 
+
+```{r, echo=F}
+day <- as.Date(bos$Date.Local[duplicated(bos$Date.Local)])
+bos[bos$Date.Local %in% c(toString(day - 1), toString(day), toString(day + 1)),]
 ```
 
-We use the Zoo library handle the data from now on. We also separate the train and test (last 365 days). ´
+The duplicated one is easier to deal, but the nan values are harder. First we calculate the mean value between the duplicated. 
 
 ```{r, echo = F}
-o3 = zooreg(bos$O3.Mean, order.by = as.Date(as.character(bos$Date.Local), format = "%Y-%m-%d"))
-plot(o3, main = 'Daily average level of O3 in Boston', 
-                                  xlab = 'Date', )
+bos[413, "O3.Mean"] = mean(bos[bos$Date.Local == toString(day),]$O3.Mean)
+bos <- distinct(bos, Date.Local, .keep_all = TRUE)
+```
+
+We use `zoo` and `tseries` libraries in order to handle the data from now on. We also separate the train and test (last 365 days).
+
+```{r, echo = F}
+o3 <- zooreg(bos$O3.Mean, order.by = as.Date(as.character(bos$Date.Local), format = "%Y-%m-%d"))
+o3.ts <- as.ts(o3)
 ```
 
 ```{r, echo= F}
-o3_train = bos[1:(dim(bos)[1] - 365),]
-o3_test = bos[(dim(bos)[1] - 365 + 1):dim(bos)[1],]
+o3_train = o3[1:(length(o3)[1] - 365),]
+o3_test = o3[(length(o3)[1] - 365 + 1):length(o3)[1],]
 ```
 
 ## Models
@@ -75,6 +74,12 @@ mae <- function(error)
 ```
 
 ### Decompose
+
+```{r, echo=F}
+# STL work only with tseries object 
+#loess_model <- slt()
+```
+
 
 ### Regression
 
