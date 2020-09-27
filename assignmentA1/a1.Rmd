@@ -73,7 +73,7 @@ o3_train = o3.clean[1:(length(o3)[1] - 365),]
 o3_test = o3.clean[(length(o3)[1] - 365 + 1):length(o3)[1],]
 ```
 
-## Models
+## Models: case 1 
 
 Now we develop some models using the train data.
 
@@ -86,21 +86,38 @@ mae <- function(ytrue, ypred)
 }
 ```
 
+We will use `rollyapply` in order to calculate the error, considering the last two years to predict one week forward. 
+
 ### Decompose
 
-```{r}
+First of all we make a seasonality test using Kruskal-Wallis. Actually it tests whether samples originate from the same distribution. We can organize it to be samples for each corresponding day. We compare two different frequencies: monthly and yearly. The second one showed the smallest p-value, in particular less than 0.05. FOr that reason, we will use 365 in the seasonality.  
+
+```{r, echo = F}
 n <- length(o3_train)
 t <- seq(1,n)
 size <- 2*365 + 7 + 1
 ```
 
+```{r,echo = F}
+freq = 31
+g <- rep(c(1:freq), ceiling(n/freq))[1:n]
+kruskal.test(o3_train, g = g)
+```
+
+```{r,echo = F}
+freq = 366
+g <- rep(c(1:freq), ceiling(n/freq))[1:n]
+kruskal.test(o3_train, g = g)
+```
 
 ```{r, echo=F}
 stl_model_day <- function(t) {
-  model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = 365), s.window = "periodic")
+  model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
+               s.window = "periodic", robust = T)
   prediction = forecast(model, h=7)
   return(as.numeric(prediction$mean))
 }
+
 prediction = rollapply(t, width = size, stl_model_day)
 stl_mae <- mae(o3_train[size:n], prediction[,7])
 ```
@@ -111,3 +128,4 @@ stl_mae <- mae(o3_train[size:n], prediction[,7])
 
 ### ARMA
 
+## Models: case 2 
