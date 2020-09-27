@@ -86,15 +86,30 @@ mae <- function(ytrue, ypred)
 
 We will use `rollyapply` in order to calculate the error, considering the last two years to predict one week forward. 
 
-### Decompose
-
-First of all we make a seasonality test using Kruskal-Wallis. Actually it tests whether samples originate from the same distribution. We can organize it to be samples for each corresponding day. We compare two different frequencies: monthly and yearly. The second one showed the smallest p-value, in particular less than 0.05. For that reason, we will use 365 in the seasonality.  
+### Baseline Model
 
 ```{r, echo = F}
 n <- length(o3_train)
 t <- seq(1,n)
 size <- 2*365 + 7 + 1
 ```
+
+We will do the naive forecast to the baseline model. 
+
+```{r, echo=F}
+baseline_model_day <- function(t) {
+  return(as.numeric(o3_train[size]))
+}
+
+prediction = rollapply(t, width = size, baseline_model_day)
+baseline_mae <- mae(o3_train[size:n], prediction)
+baseline_mae
+```
+
+
+### Decompose
+
+First of all we make a seasonality test using Kruskal-Wallis. Actually it tests whether samples originate from the same distribution. We can organize it to be samples for each corresponding day. We compare two different frequencies: monthly and yearly. The second one showed the smallest p-value, in particular less than 0.05. For that reason, we will use 365 in the seasonality.  
 
 ```{r,echo = F}
 freq = 31
