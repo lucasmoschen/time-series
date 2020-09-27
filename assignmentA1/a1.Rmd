@@ -291,4 +291,23 @@ arma_mae
 
 The first model seems a little better. 
 
+### Adapting ARMA
+
+The ARMA seems to fit well as we can see so far. However, it's not capturing other caracteristics on the data, as seasonality.  For that reason, we will combine the stl and arma model and extract the best of each one. We will decompose the series in trend and seasonality and in the reminder, we fit an arima model with `auto.arima()`. 
+
+```{r, echo=F}
+stl_arma_model_day <- function(t) {
+  model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
+               s.window = "periodic", robust = T)
+  prediction <- forecast(model, h = 7, method = 'arima')
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, stl_arma_model_day)
+stl_arma_mae <- mae(o3_train[size:n], prediction[,7])
+stl_arma_mae
+```
+
+However the MAE doesn't improved the model. For that reason, this model was disregarded. 
+
 ## Models: case 2 
