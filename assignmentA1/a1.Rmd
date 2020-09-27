@@ -1,14 +1,12 @@
 ---
 title: "Prediction of ozone level in Boston"
 author: 
-- Lucas Emanuel Resck Domingues
+- Lucas Emanuel Resck Domingues^[Escola de Matemática Aplicada]
 - Lucas Machado Moscheb^[Escola de Matemática Aplicada]
 output:
   pdf_document: default
   html_notebook: default
 ---
-
-# Predicting O3 in Boston
 
 ```{r echo = F, warning = F, message=F}
 library(zoo)
@@ -42,14 +40,14 @@ day <- as.Date(bos$Date.Local[duplicated(bos$Date.Local)])
 bos[bos$Date.Local %in% c(toString(day - 1), toString(day), toString(day + 1)),]
 ```
 
-The duplicated one is easier to deal, but the nan values are harder. First we calculate the mean value between the duplicated. 
+The duplicated one is easier to deal, but the NaN values are harder. First we calculate the mean value between the duplicated. 
 
 ```{r, echo = F}
 bos[413, "O3.Mean"] = mean(bos[bos$Date.Local == toString(day),]$O3.Mean)
 bos <- distinct(bos, Date.Local, .keep_all = TRUE)
 ```
 
-The rate of NA values is almost 5% of the dataset. 
+The rate of NaN values is almost 5% of the dataset. 
 
 ```{r, echo = F}
 o3 <- zooreg(bos$O3.Mean, order.by = as.Date(as.character(bos$Date.Local), format = "%Y-%m-%d"))
@@ -90,7 +88,7 @@ We will use `rollyapply` in order to calculate the error, considering the last t
 
 ### Decompose
 
-First of all we make a seasonality test using Kruskal-Wallis. Actually it tests whether samples originate from the same distribution. We can organize it to be samples for each corresponding day. We compare two different frequencies: monthly and yearly. The second one showed the smallest p-value, in particular less than 0.05. FOr that reason, we will use 365 in the seasonality.  
+First of all we make a seasonality test using Kruskal-Wallis. Actually it tests whether samples originate from the same distribution. We can organize it to be samples for each corresponding day. We compare two different frequencies: monthly and yearly. The second one showed the smallest p-value, in particular less than 0.05. For that reason, we will use 365 in the seasonality.  
 
 ```{r, echo = F}
 n <- length(o3_train)
