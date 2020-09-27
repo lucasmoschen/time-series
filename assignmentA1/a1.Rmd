@@ -105,21 +105,78 @@ kruskal.test(o3_train, g = g)
 ```
 
 ```{r,echo = F}
-freq = 366
+freq = 365
 g <- rep(c(1:freq), ceiling(n/freq))[1:n]
 kruskal.test(o3_train, g = g)
 ```
 
+#### Additive model 
+
+First we analyse the MAE. 
+
 ```{r, echo=F}
-stl_model_day <- function(t) {
+stl_add_model_day <- function(t) {
   model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
   prediction = forecast(model, h=7)
   return(as.numeric(prediction$mean))
 }
 
-prediction = rollapply(t, width = size, stl_model_day)
-stl_mae <- mae(o3_train[size:n], prediction[,7])
+prediction = rollapply(t, width = size, stl_add_model_day)
+stl_add_mae <- mae(o3_train[size:n], prediction[,7])
+stl_add_mae
+```
+
+We also can fit the model using `t.window` and analyse the reminder of the method. 
+
+```{r echo=F}
+model <- stl(ts(o3_train, frequency = freq), 
+             s.window = "periodic", t.window = 2*365 + 1, robust = T)
+plot(model)
+```
+
+The ACF and the PACF of the reminder: 
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(model$time.series[,'remainder'], lag.max = size, main = 'ACF Remainder')
+pacf(model$time.series[,'remainder'], lag.max = size, main = 'PACF Remainder')
+```
+
+We see that there are a big spike when $\text{lag} = 365$. It seems not so good for a reminder. We could fit an ARMA model in this reminder yet. 
+
+#### Multiplicative model 
+
+First we analyse the MAE. 
+
+```{r, echo=F}
+data = log(o3_train)
+stl_mul_model_day <- function(t) {
+  model <- stl(ts(data[t[-c((size-6):size)]], frequency = freq), 
+               s.window = "periodic", robust = T)
+  prediction = forecast(model, h=7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, stl_mul_model_day)
+stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]))
+slt_mul_mae
+```
+
+We also can fit the model using `t.window` and analyse the reminder of the method. 
+
+```{r echo=F}
+model <- stl(ts(data, frequency = freq), 
+             s.window = "periodic", t.window = 2*365 + 1, robust = T)
+plot(model)
+```
+
+The ACF and the PACF of the reminder: 
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(model$time.series[,'remainder'], lag.max = size, main = 'ACF Remainder')
+pacf(model$time.series[,'remainder'], lag.max = size, main = 'PACF Remainder')
 ```
 
 ### Regression
