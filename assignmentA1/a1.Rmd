@@ -225,4 +225,24 @@ As before, wee see spikes in $\text{lag} = 365, 730$. We expect a residual to no
 
 ### ARMA
 
+We can see the ACF and PACF:
+
+```{r, echo = F}
+par(mfrow = c(2,2))
+acf(o3_train, lag.max = 365, main = 'ACF of the data')
+pacf(o3_train, lag.max = 365, main = 'PACF of the data')
+acf(o3_train, lag.max = 30, main = 'ACF of the data')
+pacf(o3_train, lag.max = 30, main = 'PACF of the data')
+```
+
+Based on these graphs, we see both graphs has a exponentially decay, the first after the $p - q = 2$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. 
+
+```{r, echo=F}
+summary(arma(o3_train, order = c(2,1)))
+summary(arma(o3_train, order = c(3,1)))
+summary(arma(o3_train, order = c(4,2)))
+```
+
+The third model has no `p-value` of the estimated coefficients are no statistically sigificant, so it's not a good model. The first and secind models have all coefficients significant and the AIC criterion shows the second to be better. So let's use the second one with the rollyapply. 
+
 ## Models: case 2 
