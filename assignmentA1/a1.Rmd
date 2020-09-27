@@ -103,9 +103,24 @@ baseline_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, baseline_model_day)
 baseline_mae <- mae(o3_train[size:n], prediction)
-baseline_mae
-```
 
+output = function(mae, title, prediction) {
+  print(mae)
+  plot(time(o3)[1:n], o3_train,
+       main = title, xlab = "t")
+  lines(time(o3)[size:n], prediction, col="red", lwd = 3)
+  legend(
+    x = time(o3)[1],
+    y = 0.07,
+    legend = c('Real', 'Prediction'),
+    col = c('black', 'red'),
+    pch = c('', ''),
+    lty = c(1, 1)
+  )
+}
+
+output(baseline_mae, "Baseline model prediction", prediction)
+```
 
 ### Decompose
 
@@ -137,7 +152,8 @@ stl_add_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_add_model_day)
 stl_add_mae <- mae(o3_train[size:n], prediction[,7])
-stl_add_mae
+
+output(stl_add_mae, "Additive decompose prediction", prediction[,7])
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -173,7 +189,9 @@ stl_mul_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_mul_model_day)
 stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]) - 1)
-stl_mul_mae
+
+
+output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1)
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -217,7 +235,8 @@ regression_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, regression_model_day)
 regression_mae <- mae(o3_train[size:n], prediction)
-regression_mae
+
+output(regression_mae, "Regression prediction", prediction)
 ```
 
 Now we analyse the residuals. The analysed residuals will be those from each model in the rolling window. It's valid because every model has (the assumption of) white noise with the same variance. Let's see the ACF and PACF:
@@ -248,7 +267,8 @@ hw_add_model_day = function(t) {
 
 prediction = rollapply(t, width = size, hw_add_model_day)
 hw_add_mae <- mae(o3_train[size:n], prediction[,7])
-hw_add_mae
+
+output(hw_add_mae, "Additive Holt-Winters prediction", prediction[,7])
 ```
 
 MAE is not so good. We have seem better. Let's analyse the residuals:
@@ -276,7 +296,8 @@ hw_mult_model_day = function(t) {
 
 prediction = rollapply(t, width = size, hw_mult_model_day)
 hw_mult_mae <- mae(o3_train[size:n], prediction[,7] - 1)
-hw_mult_mae
+
+output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1)
 ```
 
 We see also a not so good MAE. Let's analyse the residuals:
@@ -330,7 +351,7 @@ arma_model_day <- function(t) {
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
 print('MAE ARIMA(3,0,1)')
-arma_mae
+output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7])
 ```
 
 ```{r, echo=F, warning = F}
@@ -343,7 +364,7 @@ arma_model_day <- function(t) {
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
 print('MAE ARIMA(3,0,2)')
-arma_mae
+output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7])
 ```
 
 Thhe first model seems a little better. 
