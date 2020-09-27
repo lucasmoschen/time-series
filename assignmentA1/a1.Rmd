@@ -96,7 +96,7 @@ size <- 2*365 + 7 + 1
 
 We will do the naive forecast to the baseline model. 
 
-```{r, echo=F}
+```{r baseline, echo=F}
 baseline_model_day <- function(t) {
   return(as.numeric(o3_train[(size-7)]))
 }
@@ -142,7 +142,7 @@ kruskal.test(o3_train, g = g)
 
 First we analyse the MAE. 
 
-```{r, echo=F}
+```{r additive-decompose, echo=F}
 stl_add_model_day <- function(t) {
   model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
@@ -178,7 +178,7 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 
 First we analyse the MAE. 
 
-```{r, echo=F}
+```{r multiplicative-decompose, echo=F}
 data = log(o3_train + 1)
 stl_mul_model_day <- function(t) {
   model <- stl(ts(data[t[-c((size-6):size)]], frequency = freq), 
@@ -216,13 +216,13 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 
 In this case 1, with daily records, it's reasonable seasonality of one year.
 
-```{r, echo=F}
+```{r regression, echo=F}
 Q = factor(c(rep(c(1:365), n/365), c(1:(n%%365))))
 
 regression_model_day <- function(t) {
-  if (t[1] %% 100 == 0) {
-    print(t[1]/n)
-  }
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
   train = data.frame(
     t = t[1:(size-7)],
     o3_train = o3_train[t[1:(size-7)]],
@@ -255,11 +255,11 @@ Now we will try Holt-Winters models. In fact, because of apparently seasonality,
 
 #### Additive
 
-```{r, echo=F}
+```{r additive-hw, echo=F}
 hw_add_model_day = function(t) {
-  if (t[1] %% 100 == 0) {
-    print(t[1]/n)
-  }
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
   mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "additive")
   prediction = forecast(mod, 7)
   return(as.numeric(prediction$mean))
@@ -283,12 +283,12 @@ We see the same problems as before: high correlated $\text{lag}=365$, evidence o
 
 #### Multiplicative
 
-```{r, echo=F}
+```{r multiplicative-hw, echo=F}
 data = o3_train + 1
 hw_mult_model_day = function(t) {
-  if (t[1] %% 100 == 0) {
-    print(t[1]/n)
-  }
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
   mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
   prediction = forecast(mod, 7)
   return(as.numeric(prediction$mean))
@@ -341,7 +341,7 @@ summary(arma(o3_train, order = c(4,2)))
 
 First we see that in the last two model, there is no statistical significance in the major part of the parameters, so we'll no consider it. The first, second and third models have significant parameters and similar AIC. In especial the 2° and 3° has the smallest AIC. So we will compare them both. 
 
-```{r, echo=F}
+```{r arma-1, echo=F}
 arma_model_day <- function(t) {
   model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
   prediction = forecast(model, h = 7)
@@ -354,7 +354,7 @@ print('MAE ARIMA(3,0,1)')
 output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7])
 ```
 
-```{r, echo=F, warning = F}
+```{r arma-2, echo=F, warning = F}
 arma_model_day <- function(t) {
   model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,2))
   prediction = forecast(model, h=7)
