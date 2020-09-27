@@ -114,6 +114,9 @@ First we analyse the MAE.
 
 ```{r, echo=F}
 stl_add_model_day <- function(t) {
+  if (t[1] %% 100 == 0) {
+    print(t[1]/n)
+  }
   model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
   prediction = forecast(model, h=7)
@@ -150,6 +153,9 @@ First we analyse the MAE.
 ```{r, echo=F}
 data = log(o3_train + 1)
 stl_mul_model_day <- function(t) {
+  if (t[1] %% 100 == 0) {
+    print(t[1]/n)
+  }
   model <- stl(ts(data[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
   prediction = forecast(model, h=7)
