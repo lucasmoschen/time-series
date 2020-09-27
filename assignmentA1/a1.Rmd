@@ -266,7 +266,7 @@ First we see that in the last two model, there is no statistical significance in
 ```{r, echo=F}
 arma_model_day <- function(t) {
   model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
-  prediction = forecast(model, h=7)
+  prediction = forecast(model, h = 7)
   return(as.numeric(prediction$mean))
 }
 
@@ -289,6 +289,6 @@ print('MAE ARIMA(3,0,2)')
 arma_mae
 ```
 
-Thhe first model seems a little better. 
+The first model seems a little better. 
 
 ## Models: case 2 
