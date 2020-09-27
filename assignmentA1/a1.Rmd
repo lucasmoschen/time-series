@@ -98,7 +98,7 @@ We will do the naive forecast to the baseline model.
 
 ```{r, echo=F}
 baseline_model_day <- function(t) {
-  return(as.numeric(o3_train[size]))
+  return(as.numeric(o3_train[(size-7)]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_day)
