@@ -187,6 +187,40 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 
 ### Regression
 
+In this case 1, with daily records, it's reasonable seasonality of one year.
+
+```{r, echo=F}
+Q = factor(c(rep(c(1:365), n/365), c(1:(n%%365))))
+
+regression_model_day <- function(t) {
+  if (t[1] %% 100 == 0) {
+    print(t[1]/n)
+  }
+  train = data.frame(
+    t = t[1:(size-7)],
+    o3_train = o3_train[t[1:(size-7)]],
+    Q = Q[t[1:(size-7)]]
+  )
+  mod = lm(o3_train~t+Q, data = train)
+  prediction = predict(mod, data.frame(t=t[size], Q=Q[t[size]]))
+  return(prediction)
+}
+
+prediction = rollapply(t, width = size, regression_model_day)
+regression_mae <- mae(o3_train[size:n], prediction)
+regression_mae
+```
+
+Now we analyse the residuals. Let's see the ACF and PACF:
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(o3_train[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
+pacf(o3_train[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
+```
+
+As before, wee see spikes in $\text{lag} = 365, 730$. We expect a residual to not have this.
+
 ### Holt-Winters
 
 ### ARMA
