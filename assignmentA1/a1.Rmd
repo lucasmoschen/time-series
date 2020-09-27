@@ -211,7 +211,7 @@ regression_mae <- mae(o3_train[size:n], prediction)
 regression_mae
 ```
 
-Now we analyse the residuals. Let's see the ACF and PACF:
+Now we analyse the residuals. The analysed residuals will be those from each model in the rolling window. It's valid because every model has (the assumption of) white noise with the same variance. Let's see the ACF and PACF:
 
 ```{r, echo = F}
 par(mfrow = c(1,2))
@@ -219,9 +219,66 @@ acf(o3_train[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
 pacf(o3_train[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
 ```
 
-As before, wee see spikes in $\text{lag} = 365, 730$. We expect a residual to not have this.
+As before, wee see spikes in $\text{lag} = 365, 730$. We expect a WN to not have this.
 
 ### Holt-Winters
+
+Now we will try Holt-Winters models. In fact, because of apparently seasonality, we will consider complete Holt-Winters models, both additive and multiplicative.
+
+#### Additive
+
+```{r, echo=F}
+hw_add_model_day = function(t) {
+  if (t[1] %% 100 == 0) {
+    print(t[1]/n)
+  }
+  mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "additive")
+  prediction = forecast(mod, 7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, hw_add_model_day)
+hw_add_mae <- mae(o3_train[size:n], prediction[,7])
+hw_add_mae
+```
+
+MAE is not so good. We have seem better. Let's analyse the residuals:
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'ACF Remainder')
+pacf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'PACF Remainder')
+```
+
+We see the same problems as before: high correlated $\text{lag}=365$, evidence of this not beeing a WN.
+
+#### Multiplicative
+
+```{r, echo=F}
+data = o3_train + 1
+hw_mult_model_day = function(t) {
+  if (t[1] %% 100 == 0) {
+    print(t[1]/n)
+  }
+  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+  prediction = forecast(mod, 7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, hw_mult_model_day)
+hw_mult_mae <- mae(o3_train[size:n], prediction[,7] - 1)
+hw_mult_mae
+```
+
+We see also a not so good MAE. Let's analyse the residuals:
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'ACF Remainder')
+pacf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'PACF Remainder')
+```
+
+Same problems.
 
 ### ARMA
 
