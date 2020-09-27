@@ -148,7 +148,7 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 First we analyse the MAE. 
 
 ```{r, echo=F}
-data = log(o3_train)
+data = log(o3_train + 1)
 stl_mul_model_day <- function(t) {
   model <- stl(ts(data[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
@@ -157,8 +157,8 @@ stl_mul_model_day <- function(t) {
 }
 
 prediction = rollapply(t, width = size, stl_mul_model_day)
-stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]))
-slt_mul_mae
+stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]) - 1)
+stl_mul_mae
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -176,6 +176,8 @@ par(mfrow = c(1,2))
 acf(model$time.series[,'remainder'], lag.max = size, main = 'ACF Remainder')
 pacf(model$time.series[,'remainder'], lag.max = size, main = 'PACF Remainder')
 ```
+
+We see that there are a big spike when $\text{lag} = 365$. It seems not so good for a reminder. We could fit an ARMA model in this reminder yet. The same problem as before. 
 
 ### Regression
 
