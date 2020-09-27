@@ -96,16 +96,31 @@ size <- 2*365 + 7 + 1
 
 We will do the naive forecast to the baseline model. 
 
-```{r, echo=F}
+```{r baseline, echo=F}
 baseline_model_day <- function(t) {
   return(as.numeric(o3_train[(size-7)]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_day)
 baseline_mae <- mae(o3_train[size:n], prediction)
-baseline_mae
-```
 
+output = function(mae, title, prediction) {
+  print(mae)
+  plot(time(o3)[1:n], o3_train,
+       main = title, xlab = "t")
+  lines(time(o3)[size:n], prediction, col="red", lwd = 3)
+  legend(
+    x = time(o3)[1],
+    y = 0.07,
+    legend = c('Real', 'Prediction'),
+    col = c('black', 'red'),
+    pch = c('', ''),
+    lty = c(1, 1)
+  )
+}
+
+output(baseline_mae, "Baseline model prediction", prediction)
+```
 
 ### Decompose
 
@@ -127,7 +142,7 @@ kruskal.test(o3_train, g = g)
 
 First we analyse the MAE. 
 
-```{r, echo=F}
+```{r additive-decompose, echo=F}
 stl_add_model_day <- function(t) {
   model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
@@ -137,7 +152,8 @@ stl_add_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_add_model_day)
 stl_add_mae <- mae(o3_train[size:n], prediction[,7])
-stl_add_mae
+
+output(stl_add_mae, "Additive decompose prediction", prediction[,7])
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -162,7 +178,7 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 
 First we analyse the MAE. 
 
-```{r, echo=F}
+```{r multiplicative-decompose, echo=F}
 data = log(o3_train + 1)
 stl_mul_model_day <- function(t) {
   model <- stl(ts(data[t[-c((size-6):size)]], frequency = freq), 
@@ -173,7 +189,9 @@ stl_mul_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_mul_model_day)
 stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]) - 1)
-stl_mul_mae
+
+
+output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1)
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -198,13 +216,13 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 
 In this case 1, with daily records, it's reasonable seasonality of one year.
 
-```{r, echo=F}
+```{r regression, echo=F}
 Q = factor(c(rep(c(1:365), n/365), c(1:(n%%365))))
 
 regression_model_day <- function(t) {
-  if (t[1] %% 100 == 0) {
-    print(t[1]/n)
-  }
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
   train = data.frame(
     t = t[1:(size-7)],
     o3_train = o3_train[t[1:(size-7)]],
@@ -217,10 +235,11 @@ regression_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, regression_model_day)
 regression_mae <- mae(o3_train[size:n], prediction)
-regression_mae
+
+output(regression_mae, "Regression prediction", prediction)
 ```
 
-Now we analyse the residuals. Let's see the ACF and PACF:
+Now we analyse the residuals. The analysed residuals will be those from each model in the rolling window. It's valid because every model has (the assumption of) white noise with the same variance. Let's see the ACF and PACF:
 
 ```{r, echo = F}
 par(mfrow = c(1,2))
@@ -228,9 +247,68 @@ acf(o3_train[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
 pacf(o3_train[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
 ```
 
-As before, wee see spikes in $\text{lag} = 365, 730$. We expect a residual to not have this.
+As before, wee see spikes in $\text{lag} = 365, 730$. We expect a WN to not have this.
 
 ### Holt-Winters
+
+Now we will try Holt-Winters models. In fact, because of apparently seasonality, we will consider complete Holt-Winters models, both additive and multiplicative.
+
+#### Additive
+
+```{r additive-hw, echo=F}
+hw_add_model_day = function(t) {
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
+  mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "additive")
+  prediction = forecast(mod, 7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, hw_add_model_day)
+hw_add_mae <- mae(o3_train[size:n], prediction[,7])
+
+output(hw_add_mae, "Additive Holt-Winters prediction", prediction[,7])
+```
+
+MAE is not so good. We have seem better. Let's analyse the residuals:
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'ACF Remainder')
+pacf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'PACF Remainder')
+```
+
+We see the same problems as before: high correlated $\text{lag}=365$, evidence of this not beeing a WN.
+
+#### Multiplicative
+
+```{r multiplicative-hw, echo=F}
+data = o3_train + 1
+hw_mult_model_day = function(t) {
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
+  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+  prediction = forecast(mod, 7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, hw_mult_model_day)
+hw_mult_mae <- mae(o3_train[size:n], prediction[,7] - 1)
+
+output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1)
+```
+
+We see also a not so good MAE. Let's analyse the residuals:
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+acf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'ACF Remainder')
+pacf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'PACF Remainder')
+```
+
+Same problems.
 
 ### ARMA
 
@@ -263,7 +341,7 @@ summary(arma(o3_train, order = c(4,2)))
 
 First we see that in the last two model, there is no statistical significance in the major part of the parameters, so we'll no consider it. The first, second and third models have significant parameters and similar AIC. In especial the 2° and 3° has the smallest AIC. So we will compare them both. 
 
-```{r, echo=F}
+```{r arma-1, echo=F}
 arma_model_day <- function(t) {
   model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
   prediction = forecast(model, h = 7)
@@ -273,10 +351,10 @@ arma_model_day <- function(t) {
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
 print('MAE ARIMA(3,0,1)')
-arma_mae
+output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7])
 ```
 
-```{r, echo=F, warning = F}
+```{r arma-2, echo=F, warning = F}
 arma_model_day <- function(t) {
   model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,2))
   prediction = forecast(model, h=7)
@@ -286,7 +364,7 @@ arma_model_day <- function(t) {
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
 print('MAE ARIMA(3,0,2)')
-arma_mae
+output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7])
 ```
 
 The first model seems a little better. 
