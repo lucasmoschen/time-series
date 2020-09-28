@@ -16,6 +16,15 @@ library(tseries)
 library(bnstruct)
 ```
 
+# TO DO 
+
+1. Week model: the same analysis
+
+2. Calcular o erro de quatro modelos nos dados de teste. São eles que vão servir para comparação. 
+
+3. Escrever melhor o texto em algumas transições. 
+
+4. Alguma combinação de modelo? 
 
 ## Load and visualize
 
@@ -383,9 +392,31 @@ stl_arma_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_arma_model_day)
 stl_arma_mae <- mae(o3_train[size:n], prediction[,7])
-stl_arma_mae
+output(stl_arma_mae, "STL + ARIMA prediction", prediction[,7])
 ```
 
 However the MAE doesn't improved the model. For that reason, this model was disregarded. 
 
+### Comparando os modelos na base de testes. 
+
+
+
 ## Models: case 2 
+
+In case two, we have to aggregate the diary days in a week, starting from the sunday, as requested. So we calculate the mean value in the week to be its representant. The models may be very similar to the previous. We may see less outliers. We also will separate train and test data. The first day in the data is April 1, 2001, a Sunday. SO we do not worry about that. 
+
+```{r}
+o3_week <- c(1:floor(length(o3.clean)/7))
+for(i in seq(1,length(o3.clean)-7, 7)){
+  o3_week[ceiling(i/7)] = mean(o3.clean[i:(i+6)])
+}
+
+plot(ts(o3_week), main = 'Weekly average level of O3 in Boston (after imputation)', 
+     xlab = 'Week', ylab = 'Kg/m3')
+
+o3_train_week = o3_week[1:(length(o3_week)[1] - 52)]
+o3_test_week = o3_week[-c(1:(length(o3_week)[1] - 52))]
+```
+
+
+
