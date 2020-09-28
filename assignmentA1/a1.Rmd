@@ -14,6 +14,7 @@ library(dplyr)
 library(forecast)
 library(tseries)
 library(bnstruct)
+library(ggplot2)
 ```
 
 # TO DO 
@@ -113,9 +114,9 @@ baseline_model_day <- function(t) {
 prediction = rollapply(t, width = size, baseline_model_day)
 baseline_mae <- mae(o3_train[size:n], prediction)
 
-output = function(mae, title, prediction) {
+output = function(mae, title, prediction, data) {
   print(mae)
-  plot(time(o3)[1:n], o3_train,
+  plot(time(o3)[1:n], data,
        main = title, xlab = "t")
   lines(time(o3)[size:n], prediction, col="red", lwd = 3)
   legend(
@@ -128,7 +129,7 @@ output = function(mae, title, prediction) {
   )
 }
 
-output(baseline_mae, "Baseline model prediction", prediction)
+output(baseline_mae, "Baseline model prediction", prediction, o3_train)
 ```
 
 ### Decompose
@@ -162,7 +163,7 @@ stl_add_model_day <- function(t) {
 prediction = rollapply(t, width = size, stl_add_model_day)
 stl_add_mae <- mae(o3_train[size:n], prediction[,7])
 
-output(stl_add_mae, "Additive decompose prediction", prediction[,7])
+output(stl_add_mae, "Additive decompose prediction", prediction[,7], o3_train)
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -200,7 +201,7 @@ prediction = rollapply(t, width = size, stl_mul_model_day)
 stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]) - 1)
 
 
-output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1)
+output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1, o3_train)
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -245,7 +246,7 @@ regression_model_day <- function(t) {
 prediction = rollapply(t, width = size, regression_model_day)
 regression_mae <- mae(o3_train[size:n], prediction)
 
-output(regression_mae, "Regression prediction", prediction)
+output(regression_mae, "Regression prediction", prediction, o3_train)
 ```
 
 Now we analyse the residuals. The analysed residuals will be those from each model in the rolling window. It's valid because every model has (the assumption of) white noise with the same variance. Let's see the ACF and PACF:
@@ -277,7 +278,7 @@ hw_add_model_day = function(t) {
 prediction = rollapply(t, width = size, hw_add_model_day)
 hw_add_mae <- mae(o3_train[size:n], prediction[,7])
 
-output(hw_add_mae, "Additive Holt-Winters prediction", prediction[,7])
+output(hw_add_mae, "Additive Holt-Winters prediction", prediction[,7], o3_train)
 ```
 
 MAE is not so good. We have seem better. Let's analyse the residuals:
@@ -306,7 +307,7 @@ hw_mult_model_day = function(t) {
 prediction = rollapply(t, width = size, hw_mult_model_day)
 hw_mult_mae <- mae(o3_train[size:n], prediction[,7] - 1)
 
-output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1)
+output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1, o3_train)
 ```
 
 We see also a not so good MAE. Let's analyse the residuals:
@@ -360,7 +361,7 @@ arma_model_day <- function(t) {
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
 print('MAE ARIMA(3,0,1)')
-output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7])
+output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train)
 ```
 
 ```{r arma-2, echo=F, warning = F}
@@ -373,7 +374,7 @@ arma_model_day <- function(t) {
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
 print('MAE ARIMA(3,0,2)')
-output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7])
+output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7], o3_train)
 ```
 
 The first model seems a little better. 
@@ -392,14 +393,103 @@ stl_arma_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_arma_model_day)
 stl_arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(stl_arma_mae, "STL + ARIMA prediction", prediction[,7])
+output(stl_arma_mae, "STL + ARIMA prediction", prediction[,7], o3_train)
 ```
 
 However the MAE doesn't improved the model. For that reason, this model was disregarded. 
 
 ### Comparando os modelos na base de testes. 
 
+We chose some of the best models to compare with the testing data. 
 
+```{r, echo = F}
+# n - k + 1 = size - 1 => k = n + 2 - size
+# we want o3_test(new)[size] = o3_test(old)[size] 
+o3_test = c(o3_train[(n+2-size):n], o3_test)
+
+# updating n and t
+n <- length(o3_test)
+t <- c(1:n)
+```
+
+
+```{r multiplicative-decompose-test, echo=F}
+data = log(o3_test + 1)
+stl_mul_model_day <- function(t) {
+  model <- stl(ts(data[t[-c((size-6):size)]], frequency = freq), 
+               s.window = "periodic", robust = T)
+  prediction = forecast(model, h=7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, stl_mul_model_day)
+stl_mul_mae <- mae(o3_test[size:n], exp(prediction[,7]) - 1)
+output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1, o3_test)
+```
+
+```{r regression-test, echo=F}
+Q = factor(c(rep(c(1:365), n/365), c(1:(n%%365))))
+
+regression_model_day <- function(t) {
+  train = data.frame(
+    t = t[1:(size-7)],
+    o3_test = o3_test[t[1:(size-7)]],
+    Q = Q[t[1:(size-7)]]
+  )
+  mod = lm(o3_test~t+Q, data = train)
+  prediction = predict(mod, data.frame(t=t[size], Q=Q[t[size]]))
+  return(prediction)
+}
+
+prediction = rollapply(t, width = size, regression_model_day)
+regression_mae <- mae(o3_test[size:n], prediction)
+
+output(regression_mae, "Regression prediction", prediction, o3_test)
+```
+
+```{r multiplicative-hw-test, echo=F}
+data = o3_test + 1
+hw_mult_model_day = function(t) {
+  # if (t[1] %% 100 == 0) {
+  #   print(t[1]/n)
+  # }
+  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+  prediction = forecast(mod, 7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, hw_mult_model_day)
+hw_mult_mae <- mae(o3_test[size:n], prediction[,7] - 1)
+
+output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1, o3_test)
+```
+
+
+```{r arma-1-test, echo=F}
+arma_model_day <- function(t) {
+  model <- arima(o3_test[t[1:(size-7)]], order = c(3,0,1))
+  prediction = forecast(model, h = 7)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, arma_model_day)
+arma_mae <- mae(o3_test[size:n], prediction[,7])
+print('MAE ARIMA(3,0,1)')
+output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_test)
+```
+
+Finally, we have this bar graphic to compare the values: 
+
+```{r, echo=FALSE}
+models = c('STL', 'Regression', 'HW', 'ARIMA')
+mae <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
+mae_all <- data.frame(Model = models, MAE = mae)
+ggplot(mae_all) + 
+  geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
+  labs(x = 'Modelos', y = 'MAE', 
+      title = 'Comparando MAE para os modelos') + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
 
 ## Models: case 2 
 
