@@ -2,7 +2,7 @@
 title: "Prediction of ozone level in Boston"
 author: 
 - Lucas Emanuel Resck Domingues^[Escola de Matemática Aplicada]
-- Lucas Machado Moscheb^[Escola de Matemática Aplicada]
+- Lucas Machado Moschen^[Escola de Matemática Aplicada]
 output:
   pdf_document: default
   html_notebook: default
@@ -400,7 +400,7 @@ stl_arma_mae <- mae(o3_train[size:n], prediction[,7])
 output(stl_arma_mae, "STL + ARIMA prediction", prediction[,7], o3_train)
 ```
 
-However the MAE is not't improved by this model. For that reason, this model was disregarded. 
+However the MAE isn't improved by this model. For that reason, this model was disregarded. 
 
 ### Comparing models in the test data. 
 
