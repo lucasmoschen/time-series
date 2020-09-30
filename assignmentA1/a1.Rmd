@@ -34,7 +34,9 @@ plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston',
 
 3. Compare the weekly models: we use rollapply using 2 years + 4 weeks to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+4}$. We calcute, for each $t > 2\cdot52 + 4$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
 
-4. Compare the best models for the 2 cases in the test data using the same approach. 
+4. We compare for the first the case the MAE over the 7 days of the prediction forward. 
+
+5. Compare the best models of each type for the 2 cases in the test data using the same approach. 
 
 Obs.: When applying logarithm, we applied $\log(X_t + 1)$, because there are $0$ values, or almost zero, causing numerical problems. When we compare, however, we do the opposite: $\exp\{\hat{X}_t\} - 1$
 
