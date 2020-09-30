@@ -25,6 +25,13 @@ plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston',
                                   xlab = 'Date', ylab = 'Kg/m3')
 ```
 
+## Methodology 
+
+1. Data treatment: analyse missing and duplicated data. 
+2. Compare the daily models: we use rollyaaply using 2 years + 6 days to predict the day, that is, we use $\{X_t\}_{t-2\cdot365}^t$ to predict $X_{t+7}$. We calcute, for each $t > 2\cdot365 + 6$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+3. Compare the weekly models: we use rollyapply using 2 years + 1 week to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+1}$. We calcute, for each $t > 2\cdot52 + 1$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+4. Compare the best models for the 2 cases in the test data using the same approach. 
+
 ## Data treatment
 
 We noticed that some days do not exist in the dataset, for example, the day August 31, 2001 does not have information in the dataset. 
@@ -100,7 +107,7 @@ We will do the naive forecast to the baseline model.
 
 ```{r baseline, echo=F}
 baseline_model_day <- function(t) {
-  return(as.numeric(o3_train[(size-7)]))
+  return(as.numeric(o3_train[t[(size-7)]]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_day)
@@ -326,7 +333,7 @@ acf(o3_train, lag.max = 30, main = 'ACF of the data')
 pacf(o3_train, lag.max = 30, main = 'PACF of the data')
 ```
 
-Based on these graphs, we see both graphs has a exponentially decay, the first after the $p - q = 1$ or $p - q = 2$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
+Based on these graphs, we see both graphs has a exponentially decay, the first after the $q - p = -1$ or $q - p = 0$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
 
 The AIC measures the goodness of fit and the simplicity of the model into a single statistic. Generally we aim to reduce the AIC. 
 
@@ -336,45 +343,43 @@ $$
 where $k = p + q + 2$ and $\hat{L}$ is the maximum value of the likelihood for the model. 
 
 ```{r, echo=F}
+summary(arma(o3_train, order = c(1,2)))
 summary(arma(o3_train, order = c(2,1)))
-summary(arma(o3_train, order = c(3,1)))
 summary(arma(o3_train, order = c(3,2)))
+summary(arma(o3_train, order = c(2,3)))
 summary(arma(o3_train, order = c(4,3)))
-summary(arma(o3_train, order = c(4,2)))
 ```
 
 First we see that in the last two model, there is no statistical significance in the major part of the parameters, so we'll no consider it. The first, second and third models have significant parameters and similar AIC. In especial the 2° and 3° has the smallest AIC. So we will compare them both.
 
-We see the MAE of the ARIMA(3, 0, 1):
+We see the MAE of the ARIMA(1, 0, 2):
 
 ```{r arma-1, echo=F}
 arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
+  model <- arima(o3_train[t[1:(size-7)]], order = c(1,0,2))
   prediction = forecast(model, h = 7)
   return(as.numeric(prediction$mean))
 }
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train, dates, size)
+output(arma_mae, "ARIMA(1,0,2) prediction", prediction[,7], o3_train, dates, size)
 ```
 
-And the MAE of the ARIMA(3, 0, 2):
+And the MAE of the ARIMA(3, 0, 1):
 
 ```{r arma-2, echo=F, warning = F}
 arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,2))
+  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
   prediction = forecast(model, h=7)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
-print('MAE ARIMA(3,0,2)')
-output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7], o3_train, dates, size)
+output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train, dates, size)
 ```
 
-
-The first model seems a little better. So, let's check the residuals to observe it's problems. 
+The second model seems a little better. So, let's check the residuals to observe it's problems. 
 
 ```{r}
 model <- arima(o3_train, order = c(3,0,1))
@@ -492,7 +497,7 @@ mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Modelos', y = 'MAE', 
-      title = 'Comparando MAE para os modelos') + 
+      title = "Comparing model's MAE in test data") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -526,7 +531,7 @@ We will do the naive forecast to the baseline model.
 
 ```{r baseline-week, echo=F}
 baseline_model_week <- function(t) {
-  return(as.numeric(o3_train_week[(size-1)]))
+  return(as.numeric(o3_train_week[t[(size-1)]]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_week)
@@ -750,7 +755,7 @@ acf(o3_train_week, lag.max = 52, main = 'ACF of the data')
 pacf(o3_train_week, lag.max = 52, main = 'PACF of the data')
 ```
 
-Based on these graphs, we see both graphs has a exponentially decay, the first after the $p - q = 1$ or $p - q = 2$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
+Based on these graphs, we see both graphs has a exponentially decay, the first after the $q - p = -1$ or $q - p = 0$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
 
 ```{r, echo=F}
 summary(arma(o3_train_week, order = c(2,0)))
@@ -921,7 +926,7 @@ mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Modelos', y = 'MAE', 
-      title = 'Comparando MAE para os modelos') + 
+      title = "Comparing model's MAE in test data") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
