@@ -485,8 +485,8 @@ Finally, we have this bar graphic to compare the values:
 
 ```{r, echo=FALSE}
 models = c('STL', 'Regression', 'HW', 'ARIMA')
-mae <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
-mae_all <- data.frame(Model = models, MAE = mae)
+mae_result <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
+mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Modelos', y = 'MAE', 
@@ -912,8 +912,8 @@ Finally, we have this bar graphic to compare the values:
 
 ```{r, echo=FALSE}
 models = c('STL', 'Regression', 'HW', 'ARIMA')
-mae <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
-mae_all <- data.frame(Model = models, MAE = mae)
+mae_result <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
+mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Modelos', y = 'MAE', 
