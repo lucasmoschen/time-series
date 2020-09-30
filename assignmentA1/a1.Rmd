@@ -380,6 +380,7 @@ print('MAE ARIMA(3,0,2)')
 output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7], o3_train)
 ```
 
+
 The first model seems a little better. So, let's check the residuals to observe it's problems. 
 
 ```{r}
@@ -742,92 +743,97 @@ pacf(o3_train_week[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
 
 Same problems as before. Holt-Winters doesn't appear to work well in this case.
 
-<!--### ARMA
+--### ARMA
 
 We can see the ACF and PACF:
 
 ```{r, echo = F}
-par(mfrow = c(2,2))
+par(mfrow = c(1,2))
 acf(o3_train_week, lag.max = 52, main = 'ACF of the data')
 pacf(o3_train_week, lag.max = 52, main = 'PACF of the data')
-acf(o3_train_week, lag.max = 4, main = 'ACF of the data')
-pacf(o3_train_week, lag.max = 4, main = 'PACF of the data')
 ```
 
 Based on these graphs, we see both graphs has a exponentially decay, the first after the $p - q = 1$ or $p - q = 2$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
 
-The AIC measures the goodness of fit and the simplicity of the model into a single statistic. Generally we aim to reduce the AIC. 
-
-$$
-AIC = 2k - 2\ln(\hat{L}),
-$$
-where $k = p + q + 2$ and $\hat{L}$ is the maximum value of the likelihood for the model. 
-
 ```{r, echo=F}
-summary(arma(o3_train, order = c(2,1)))
-summary(arma(o3_train, order = c(3,1)))
-summary(arma(o3_train, order = c(3,2)))
-summary(arma(o3_train, order = c(4,3)))
-summary(arma(o3_train, order = c(4,2)))
+summary(arma(o3_train_week, order = c(2,0)))
+summary(arma(o3_train_week, order = c(2,1)))
+summary(arma(o3_train_week, order = c(3,1)))
+summary(arma(o3_train_week, order = c(3,2)))
+summary(arma(o3_train_week, order = c(4,2)))
+summary(arma(o3_train_week, order = c(4,3)))
 ```
 
-First we see that in the last two model, there is no statistical significance in the major part of the parameters, so we'll no consider it. The first, second and third models have significant parameters and similar AIC. In especial the 2° and 3° has the smallest AIC. So we will compare them both.
+Wee see that from the second onwards, we have parameters without statistical significance. However the second and third models have good AIC either. The last three has problems with the Hessian, so the p-values could not be calculated. For that reason, we shall disregard them and compare the others. In special we'll test ARMA(3,1), AR(2) and ARMA(2,1).
 
-We see the MAE of the ARIMA(3, 0, 1):
+We see the MAE of the AR(2):
 
 ```{r arma-1-week, echo=F}
-arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
-  prediction = forecast(model, h = 7)
+arma_model_week <- function(t) {
+  model <- arima(o3_train_week[t[1:(size-1)]], order = c(2,0,0))
+  prediction = forecast(model, h = 1)
   return(as.numeric(prediction$mean))
 }
-prediction = rollapply(t, width = size, arma_model_day)
-arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train)
+prediction = rollapply(t, width = size, arma_model_week)
+arma_mae <- mae(o3_train_week[size:n], prediction)
+output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week)
 ```
 
-And the MAE of the ARIMA(3, 0, 2):
+And the MAE of the ARMA(2, 1):
 
 ```{r arma-2-week, echo=F, warning = F}
-arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,2))
-  prediction = forecast(model, h=7)
+arma_model_week <- function(t) {
+  model <- arima(o3_train_week[t[1:(size-1)]], order = c(2,0,1))
+  prediction = forecast(model, h=1)
   return(as.numeric(prediction$mean))
 }
 
-prediction = rollapply(t, width = size, arma_model_day)
-arma_mae <- mae(o3_train[size:n], prediction[,7])
-print('MAE ARIMA(3,0,2)')
-output(arma_mae, "ARIMA(3,0,2) prediction", prediction[,7], o3_train)
+prediction = rollapply(t, width = size, arma_model_week)
+arma_mae <- mae(o3_train_week[size:n], prediction)
+output_week(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_train_week)
 ```
 
-The first model seems a little better. So, let's check the residuals to observe it's problems. 
+And the MAE of the ARMA(3, 1):
+
+```{r arma-2-week, echo=F, warning = F}
+arma_model_week <- function(t) {
+  model <- arima(o3_train_week[t[1:(size-1)]], order = c(3,0,1))
+  prediction = forecast(model, h=1)
+  return(as.numeric(prediction$mean))
+}
+
+prediction = rollapply(t, width = size, arma_model_week)
+arma_mae <- mae(o3_train_week[size:n], prediction)
+output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week)
+```
+
+The second model seems a little better. So, let's check the residuals to observe it's problems. 
 
 ```{r}
-model <- arima(o3_train, order = c(3,0,1))
+model <- arima(o3_train_week, order = c(2,0,1))
 checkresiduals(model, lag = 2*freq, lag.max = 2*freq)
 ```
 
-It's interesting to note the ACF has a peak around the 365, so the ARMA model did not seem to capture the seasonality. It would be better to fit an Seasonal ARIMA further. The histogram is pretty similar to normal distribution. The test made analyses if the mean is 0. It may be because the p-value is really small. That's the reason to adapt ARMA with STL, that is, fit an ARMA model in the residuals. 
+It's interesting to note the ACF has a peak around the 52, so the ARMA model did not seem to capture the seasonality. It would be better to fit an Seasonal ARIMA further. The histogram is pretty similar to normal distribution. The test made analyses if the mean is 0. It may be because the p-value is really small. The ACF also suggests that we include a high order parameter in MA and AR. However, in trying to fit an ARMA(3,2), we struggle with stationarity in AR part. For that reason, the model has it fails and alone it seems that it cannot be improved. 
 
 ### Adapting ARMA
 
-The ARMA seems to fit well as we can see so far. However, it's not capturing other caracteristics on the data, as seasonality.  For that reason, we will combine the stl and arma model and extract the best of each one. We will decompose the series in trend and seasonality and in the reminder, we fit an arima model with `auto.arima()`. 
+The ARMA seems to fit well as we can see so far. However, it's not capturing other caracteristics on the data, as seasonality as mentioned.  For that reason, we will combine the STL and ARMA model and extract the best of each one. We will decompose the series in trend and seasonality and in the reminder, we fit an arima model with `auto.arima()`. 
 
 ```{r, echo=F}
-stl_arma_model_day <- function(t) {
-  model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
+stl_arma_model_week <- function(t) {
+  model <- stl(ts(o3_train_week[t[1:(size-1)]], frequency = freq), 
                s.window = "periodic", robust = T)
-  prediction <- forecast(model, h = 7, method = 'arima')
+  prediction <- forecast(model, h = 1, method = 'arima')
   return(as.numeric(prediction$mean))
 }
 
-prediction = rollapply(t, width = size, stl_arma_model_day)
-stl_arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(stl_arma_mae, "STL + ARIMA prediction", prediction[,7], o3_train)
+prediction = rollapply(t, width = size, stl_arma_model_week)
+stl_arma_mae <- mae(o3_train_week[size:n], prediction)
+output_week(stl_arma_mae, "STL + ARIMA prediction", prediction, o3_train_week)
 ```
 
-However the MAE isn't improved by this model. For that reason, this model was disregarded.-->
+In spite of the improvement in the STL model, the MAE isn't improved by this model when compared to ARMA best model. For that reason, this model was disregarded.
 
 ### Comparing models in the test data. 
 
@@ -896,24 +902,23 @@ output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 
 ```
 
 
-<!--```{r arma-1-test-week, echo=F}
-arma_model_day <- function(t) {
-  model <- arima(o3_test[t[1:(size-7)]], order = c(3,0,1))
-  prediction = forecast(model, h = 7)
+```{r arma-2-week-test, echo=F, warning = F}
+arma_model_week <- function(t) {
+  model <- arima(o3_test_week[t[1:(size-1)]], order = c(2,0,1))
+  prediction = forecast(model, h=1)
   return(as.numeric(prediction$mean))
 }
 
-prediction = rollapply(t, width = size, arma_model_day)
-arma_mae <- mae(o3_test[size:n], prediction[,7])
-print('MAE ARIMA(3,0,1)')
-output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_test)
-```-->
+prediction = rollapply(t, width = size, arma_model_week)
+arma_mae <- mae(o3_test_week[size:n], prediction)
+output(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_test_week)
+```
 
 Finally, we have this bar graphic to compare the values: 
 
 ```{r, echo=FALSE}
-models = c('STL', 'Regression', 'HW')#, 'ARIMA')
-mae <- c(stl_mul_mae, regression_mae, hw_mult_mae)#, arma_mae)
+models = c('STL', 'Regression', 'HW', 'ARIMA')
+mae <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
 mae_all <- data.frame(Model = models, MAE = mae)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
