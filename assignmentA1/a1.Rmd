@@ -17,16 +17,6 @@ library(bnstruct)
 library(ggplot2)
 ```
 
-# TO DO 
-
-1. Week model: ARIMA
-
-2. Escrever melhor o texto em algumas transições. 
-
-3. Alguma combinação de modelo?
-
-4. Residual analysis with adjusted error, not predictive one.
-
 ## Load and visualize
 
 ```{r, echo = F}
@@ -250,12 +240,16 @@ regression_mae <- mae(o3_train[size:n], prediction)
 output(regression_mae, "Regression prediction", prediction, o3_train)
 ```
 
-Now we analyse the residuals. The analysed residuals will be those from each model in the rolling window. It's valid because every model has (the assumption of) white noise with the same variance. Let's see the ACF and PACF:
+Now we analyse the residuals. We fit a LM model in all training data in order to analyse it.
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(o3_train[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
-pacf(o3_train[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
+```{r}
+train = data.frame(
+  t = t,
+  o3_train = o3_train,
+  Q = Q
+)
+mod = lm(o3_train~t+Q, data = train)
+checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
 As before, wee see spikes in $\text{lag} = 365, 730$. We expect a WN to not have this.
@@ -284,13 +278,12 @@ output(hw_add_mae, "Additive Holt-Winters prediction", prediction[,7], o3_train)
 
 MAE is not so good, nor is the resulting graph. HW tends to "explode". We have seem better results. Let's analyse the residuals:
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'ACF Remainder')
-pacf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'PACF Remainder')
+```{r}
+mod = HoltWinters(ts(o3_train, frequency = 365), beta = T, gamma = T, seasonal = "additive")
+checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
-We see the same problems as before: high correlated $\text{lag}=365$, evidence of this not beeing a WN.
+We see the same problems as before: high correlated $\text{lag}=365, 730$, evidence of this not beeing a WN.
 
 #### Multiplicative
 
@@ -311,12 +304,11 @@ hw_mult_mae <- mae(o3_train[size:n], prediction[,7] - 1)
 output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1, o3_train)
 ```
 
-We see also a not so good MAE and graph. Let's analyse the residuals:
+We see also a not so good MAE and graph. Let's analyse the residuals of an model fitted in all training data:
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'ACF Remainder')
-pacf(o3_train[size:n]-prediction[,7], lag.max = size, main = 'PACF Remainder')
+```{r}
+mod = HoltWinters(ts(o3_train+1, frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
 Same problems as before. Holt-Winters doesn't appear to work well in this case.
@@ -671,12 +663,16 @@ regression_mae <- mae(o3_train_week[size:n], prediction)
 output_week(regression_mae, "Regression prediction", prediction, o3_train_week)
 ```
 
-Now we analyse the residuals. The analysed residuals will be those from each model in the rolling window. It's valid because every model has (the assumption of) white noise with the same variance. Let's see the ACF and PACF:
+Now we analyse the residuals.
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(o3_train_week[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
-pacf(o3_train_week[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
+```{r}
+train = data.frame(
+  t = t,
+  o3_train_week = o3_train_week,
+  Q = Q
+)
+mod = lm(o3_train_week~t+Q, data = train)
+checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
 Wee see spikes in $\text{lag} = 52, 104$. Same as before.
@@ -705,13 +701,12 @@ output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction, o3_train
 
 MAE is not so good as the other models seen so far. We see some kind of explosion in the resulting graph. We know that HW tends to "explode". We have seem better results. Let's analyse the residuals:
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(o3_train_week[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
-pacf(o3_train_week[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
+```{r}
+mod = HoltWinters(ts(o3_train_week, frequency = 52), beta = T, gamma = T, seasonal = "additive")
+checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
-We see the same problems as before: this is not white noise.
+We see the same problems as before: high correlated $\text{lag}=52, 104$, evidence of this not beeing a WN.
 
 #### Multiplicative
 
@@ -734,10 +729,9 @@ output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 
 
 We see also a not so good MAE and graph. Let's analyse the residuals:
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(o3_train_week[size:n]-prediction, lag.max = size, main = 'ACF Remainder')
-pacf(o3_train_week[size:n]-prediction, lag.max = size, main = 'PACF Remainder')
+```{r}
+mod = HoltWinters(ts(o3_train_week, frequency = 52), beta = T, gamma = T, seasonal = "multiplicative")
+checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
 Same problems as before. Holt-Winters doesn't appear to work well in this case.
