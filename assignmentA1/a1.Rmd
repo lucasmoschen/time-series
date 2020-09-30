@@ -14,6 +14,7 @@ library(dplyr)
 library(forecast)
 library(tseries)
 library(bnstruct)
+library(lmtest)
 library(ggplot2)
 ```
 
@@ -28,9 +29,11 @@ plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston',
 ## Methodology 
 
 1. Data treatment: analyse missing and duplicated data. 
-2. Compare the daily models: we use rollyaaply using 2 years + 6 days to predict the day, that is, we use $\{X_t\}_{t-2\cdot365}^t$ to predict $X_{t+7}$. We calcute, for each $t > 2\cdot365 + 6$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
-3. Compare the weekly models: we use rollyapply using 2 years + 1 week to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+1}$. We calcute, for each $t > 2\cdot52 + 1$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+2. Compare the daily models: we use rollapply using 2 years + 6 days to predict the day, that is, we use $\{X_t\}_{t-2\cdot365}^t$ to predict $X_{t+7}$. We calcute, for each $t > 2\cdot365 + 6$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+3. Compare the weekly models: we use rollapply using 2 years + 4 weeks to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+4}$. We calcute, for each $t > 2\cdot52 + 4$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
 4. Compare the best models for the 2 cases in the test data using the same approach. 
+
+Obs.: When applying logarithm, we applied $\log(X_t + 1)$, because there are $0$ values, or almost zero, causing numerical problems. When we compare, however, we do the opposite: $\exp\{\hat{X}_t\} - 1$
 
 ## Data treatment
 
@@ -103,7 +106,7 @@ t <- seq(1,n)
 size <- 2*365 + 7 + 1
 ```
 
-We will do the naive forecast to the baseline model. 
+We will do the naive forecast to the baseline model. It gets $\hat{X}_{t+7} = X_t$.
 
 ```{r baseline, echo=F}
 baseline_model_day <- function(t) {
@@ -175,17 +178,15 @@ plot(model)
 
 The ACF and the PACF of the reminder: 
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(model$time.series[,'remainder'], lag.max = size, main = 'ACF Remainder')
-pacf(model$time.series[,'remainder'], lag.max = size, main = 'PACF Remainder')
+```{r, echo = F, warning = F}
+checkresiduals(model$time.series[,'remainder'], lag = 2*freq, lag.max = 2*freq)
 ```
 
-We see that there are a big spike when $\text{lag} = 365$. It seems not so good for a reminder. We could fit an ARMA model in this reminder yet. 
+We see that there are a big spike when $\text{lag} = 365$. It seems not so good for a reminder. We could fit an ARMA model in this reminder yet. We also see a similar normal distribution, but the right tail is a little strange for it. It's a good model, but it can be improved. 
 
 #### Multiplicative model 
 
-First we analyse the MAE. 
+First we analyse the MAE using the `rollyapply` again. 
 
 ```{r multiplicative-decompose, echo=F}
 data = log(o3_train + 1)
@@ -198,7 +199,6 @@ stl_mul_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, stl_mul_model_day)
 stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]) - 1)
-
 
 output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1, o3_train, dates, size)
 ```
@@ -213,10 +213,8 @@ plot(model)
 
 The ACF and the PACF of the reminder: 
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(model$time.series[,'remainder'], lag.max = size, main = 'ACF Remainder')
-pacf(model$time.series[,'remainder'], lag.max = size, main = 'PACF Remainder')
+```{r, echo = F, warning=F}
+checkresiduals(model$time.series[,'remainder'])
 ```
 
 We see that there are a big spike when $\text{lag} = 365$. It seems not so good for a reminder. We could fit an ARMA model in this reminder yet. The same problem as before. 
@@ -342,44 +340,54 @@ AIC = 2k - 2\ln(\hat{L}),
 $$
 where $k = p + q + 2$ and $\hat{L}$ is the maximum value of the likelihood for the model. 
 
+We tested 
+
 ```{r, echo=F}
-summary(arma(o3_train, order = c(1,2)))
-summary(arma(o3_train, order = c(2,1)))
-summary(arma(o3_train, order = c(3,2)))
-summary(arma(o3_train, order = c(2,3)))
-summary(arma(o3_train, order = c(4,3)))
+arma_print <- function(ar, ma){
+  model <- arima(o3_train, order = c(ar,0,ma))
+  print(paste('Model ARMA(', ar, ',', ma, ')', sep = ''))
+  print(paste('AIC = ', model$aic, sep = ''))
+  print('p-values')
+  print(coeftest(model)[,'Pr(>|z|)'])
+  print('')
+}
+arma_print(1,2)
+arma_print(2,1)
+arma_print(3,1)
+arma_print(3,2)
+arma_print(2,3)
 ```
 
-First we see that in the last two model, there is no statistical significance in the major part of the parameters, so we'll no consider it. The first, second and third models have significant parameters and similar AIC. In especial the 2° and 3° has the smallest AIC. So we will compare them both.
+Considering $\alpha = 0.05$, only the first and third models have all parameters significant. But second and tha last have one or two non significant. Considering that, I will compare the two with minimum AIC, the third (ARMA(3,1)) and the fifth (ARMA(2,3)). 
 
-We see the MAE of the ARIMA(1, 0, 2):
+We see the MAE of the ARIMA(3, 0, 1):
 
 ```{r arma-1, echo=F}
 arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(1,0,2))
+  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
   prediction = forecast(model, h = 7)
   return(as.numeric(prediction$mean))
 }
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(arma_mae, "ARIMA(1,0,2) prediction", prediction[,7], o3_train, dates, size)
+output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train, dates, size)
 ```
 
-And the MAE of the ARIMA(3, 0, 1):
+And the MAE of the ARIMA(2, 0, 3):
 
 ```{r arma-2, echo=F, warning = F}
 arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,1))
+  model <- arima(o3_train[t[1:(size-7)]], order = c(2,0,3))
   prediction = forecast(model, h=7)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train, dates, size)
+output(arma_mae, "ARIMA(2,0,3) prediction", prediction[,7], o3_train, dates, size)
 ```
 
-The second model seems a little better. So, let's check the residuals to observe it's problems. 
+The first model seems a little better. So, let's check the residuals to observe it's problems. 
 
 ```{r}
 model <- arima(o3_train, order = c(3,0,1))
@@ -394,9 +402,12 @@ The ARMA seems to fit well as we can see so far. However, it's not capturing oth
 
 ```{r, echo=F}
 stl_arma_model_day <- function(t) {
-  model <- stl(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
+  model <- stlm(ts(o3_train[t[-c((size-6):size)]], frequency = freq), 
                s.window = "periodic", robust = T)
-  prediction <- forecast(model, h = 7, method = 'arima')
+  prediction <- forecast(model, h = 7, 
+                         forecastfunction=function(x,h,level){
+                              fit <- arima(x, order=c(3,0,1), include.mean=FALSE)
+                         return(forecast(fit,h=N,level=level))})
   return(as.numeric(prediction$mean))
 }
 
@@ -409,7 +420,7 @@ However the MAE isn't improved by this model. For that reason, this model was di
 
 ### Comparing models in the test data. 
 
-We chose some of the best models to compare with the testing data. 
+We chose some of the best models to compare with the test data. 
 
 ```{r, echo = F}
 # n - k + 1 = size - 1 => k = n + 2 - size
@@ -422,6 +433,15 @@ n <- length(o3_test)
 t <- c(1:n)
 ```
 
+```{r baseline-test, echo=F}
+baseline_model_day <- function(t) {
+  return(as.numeric(o3_test[t[(size-7)]]))
+}
+
+prediction = rollapply(t, width = size, baseline_model_day)
+baseline_mae <- mae(o3_test[size:n], prediction)
+output(baseline_mae, "Baseline prediction", prediction, o3_test, dates = dates, size = size)
+```
 
 ```{r multiplicative-decompose-test, echo=F}
 data = log(o3_test + 1)
@@ -488,11 +508,9 @@ print('MAE ARIMA(3,0,1)')
 output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_test, dates = dates, size = size)
 ```
 
-Finally, we have this bar graphic to compare the values: 
-
 ```{r, echo=FALSE}
-models = c('STL', 'Regression', 'HW', 'ARIMA')
-mae_result <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
+models = c('Baseline','STL', 'Regression', 'HW', 'ARIMA')
+mae_result <- c(baseline_mae, stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
 mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
@@ -524,14 +542,14 @@ o3_test_week = o3_week[-c(1:(length(o3_week)[1] - 52))]
 ```{r, echo = F}
 n <- length(o3_train_week)
 t <- seq(1,n)
-size <- 2*52 + 1 + 1
+size <- 2*52 + 4 + 1
 ```
 
 We will do the naive forecast to the baseline model.
 
 ```{r baseline-week, echo=F}
 baseline_model_week <- function(t) {
-  return(as.numeric(o3_train_week[t[(size-1)]]))
+  return(as.numeric(o3_train_week[t[(size-4)]]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_week)
@@ -577,32 +595,31 @@ We see the MAE of the additive decompose model:
 
 ```{r additive-decompose-week, echo=F}
 stl_add_model_week <- function(t) {
-  model <- stl(ts(o3_train_week[t[1:(size-1)]], frequency = freq), 
+  model <- stl(ts(o3_train_week[t[1:(size-4)]], frequency = freq), 
                s.window = "periodic", robust = T)
-  prediction = forecast(model, h=1)
+  prediction = forecast(model, h=4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, stl_add_model_week)
-stl_add_mae <- mae(o3_train_week[size:n], prediction)
+stl_add_mae <- mae(o3_train_week[size:n], prediction[,4])
 
-output_week(stl_add_mae, "Additive decompose prediction", prediction, o3_train_week, dates, size)
+output_week(stl_add_mae, "Additive decompose prediction", prediction[,4], 
+            o3_train_week, dates, size)
 ```
 
 We fit the model using `t.window` and analyse the reminder:
 
 ```{r echo=F}
 model <- stl(ts(o3_train_week, frequency = freq), 
-             s.window = "periodic", t.window = 2*52 + 1, robust = T)
+             s.window = "periodic", t.window = 2*52 + 4, robust = T)
 plot(model)
 ```
 
 The ACF and the PACF of the reminder: 
 
-```{r, echo = F}
-par(mfrow = c(1,2))
-acf(model$time.series[,'remainder'], lag.max = size, main = 'ACF Remainder')
-pacf(model$time.series[,'remainder'], lag.max = size, main = 'PACF Remainder')
+```{r, echo = F, warning = F}
+checkresiduals(model$time.series[,3])
 ```
 
 We see a big spike when $\text{lag} = 52$. It seems not so good for a reminder
@@ -614,17 +631,18 @@ We analyse the MAE:
 ```{r multiplicative-decompose-week, echo=F}
 data = log(o3_train_week + 1)
 stl_mul_model_week <- function(t) {
-  model <- stl(ts(data[t[1:(size-1)]], frequency = freq), 
+  model <- stl(ts(data[t[1:(size-4)]], frequency = freq), 
                s.window = "periodic", robust = T)
-  prediction = forecast(model, h=1)
+  prediction = forecast(model, h=4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, stl_mul_model_week)
-stl_mul_mae <- mae(o3_train_week[size:n], exp(prediction) - 1)
+stl_mul_mae <- mae(o3_train_week[size:n], exp(prediction[,4]) - 1)
 
 
-output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction) - 1, o3_train_week, dates, size)
+output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,4]) - 1,
+            o3_train_week, dates, size)
 ```
 
 Using `t.window` and analysing the reminder:
@@ -657,9 +675,9 @@ regression_model_week <- function(t) {
   #   print(t[1]/n)
   # }
   train = data.frame(
-    t = t[1:(size-1)],
-    o3_train_week = o3_train_week[t[1:(size-1)]],
-    Q = Q[t[1:(size-1)]]
+    t = t[1:(size-4)],
+    o3_train_week = o3_train_week[t[1:(size-4)]],
+    Q = Q[t[1:(size-4)]]
   )
   mod = lm(o3_train_week~t+Q, data = train)
   prediction = predict(mod, data.frame(t=t[size], Q=Q[t[size]]))
@@ -697,13 +715,14 @@ hw_add_model_week = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(o3_train_week[t[1:(size-1)]], frequency = 52), beta = T, gamma = T, seasonal = "additive")
-  prediction = forecast(mod, 1)
+  mod = HoltWinters(ts(o3_train_week[t[1:(size-4)]], frequency = 52), 
+                    beta = T, gamma = T, seasonal = "additive")
+  prediction = forecast(mod, h=4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, hw_add_model_week)
-hw_add_mae <- mae(o3_train_week[size:n], prediction)
+hw_add_mae <- mae(o3_train_week[size:n], prediction[,4])
 
 output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction, o3_train_week, dates, size)
 ```
@@ -725,15 +744,17 @@ hw_mult_model_week = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(data[t[1:(size-1)]], frequency = 52), beta = T, gamma = T, seasonal = "multiplicative")
-  prediction = forecast(mod, 1)
+  mod = HoltWinters(ts(data[t[1:(size-4)]], frequency = 52), 
+                    beta = T, gamma = T, seasonal = "multiplicative")
+  prediction = forecast(mod, h=4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, hw_mult_model_week)
-hw_mult_mae <- mae(o3_train_week[size:n], prediction - 1)
+hw_mult_mae <- mae(o3_train_week[size:n], prediction[,4] - 1)
 
-output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 1, o3_train_week, dates, size)
+output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", 
+            prediction[,4] - 1, o3_train_week, dates, size)
 ```
 
 We see also a not so good MAE and graph. Let's analyse the residuals:
@@ -745,7 +766,7 @@ checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 
 Same problems as before. Holt-Winters doesn't appear to work well in this case.
 
---### ARMA
+### ARMA
 
 We can see the ACF and PACF:
 
@@ -755,64 +776,57 @@ acf(o3_train_week, lag.max = 52, main = 'ACF of the data')
 pacf(o3_train_week, lag.max = 52, main = 'PACF of the data')
 ```
 
-Based on these graphs, we see both graphs has a exponentially decay, the first after the $q - p = -1$ or $q - p = 0$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
+Based on these graphs, we see both graphs has a exponentially decay, the first after the $q - p = 1$ or $q - p = 2$. In order to identify the model, we will compare the adjusted ARMA models with different $p$ and $q$. First we simply fit it to look at the Akaike Information Criteria (AIC) and the significance of the parameters estimated.   
 
 ```{r, echo=F}
-summary(arma(o3_train_week, order = c(2,0)))
-summary(arma(o3_train_week, order = c(2,1)))
-summary(arma(o3_train_week, order = c(3,1)))
-summary(arma(o3_train_week, order = c(3,2)))
-summary(arma(o3_train_week, order = c(4,2)))
-summary(arma(o3_train_week, order = c(4,3)))
+arma_print <- function(ar, ma){
+  model <- arima(o3_train_week, order = c(ar,0,ma))
+  print(paste('Model ARMA(', ar, ',', ma, ')', sep = ''))
+  print(paste('AIC = ', model$aic, sep = ''))
+  print('p-values')
+  print(coeftest(model)[,'Pr(>|z|)'])
+  print('')
+}
+arma_print(1,2)
+arma_print(2,1)
+arma_print(3,1)
+arma_print(1,3)
+arma_print(2,3)
 ```
 
-Wee see that from the second onwards, we have parameters without statistical significance. However the second and third models have good AIC either. The last three has problems with the Hessian, so the p-values could not be calculated. For that reason, we shall disregard them and compare the others. In special we'll test ARMA(3,1), AR(2) and ARMA(2,1).
+The last three models are far the best ones. So we'll pick them out to train our model. However, the ARMA(2,3) could no be used, because of stationary problems. So: 
 
-We see the MAE of the AR(2):
+We see the MAE of the ARMA(1,3):
 
 ```{r arma-1-week, echo=F}
 arma_model_week <- function(t) {
-  model <- arima(o3_train_week[t[1:(size-1)]], order = c(2,0,0))
-  prediction = forecast(model, h = 1)
+  model <- arima(o3_train_week[t[1:(size-4)]], order = c(1,0,3))
+  prediction = forecast(model, h = 4)
   return(as.numeric(prediction$mean))
 }
 prediction = rollapply(t, width = size, arma_model_week)
 arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week, dates, size)
-```
-
-And the MAE of the ARMA(2, 1):
-
-```{r arma-2-week-1, echo=F, warning = F}
-arma_model_week <- function(t) {
-  model <- arima(o3_train_week[t[1:(size-1)]], order = c(2,0,1))
-  prediction = forecast(model, h=1)
-  return(as.numeric(prediction$mean))
-}
-
-prediction = rollapply(t, width = size, arma_model_week)
-arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_train_week, dates, size)
+output_week(arma_mae, "ARIMA(1,0,3) prediction", prediction[,4], o3_train_week, dates, size)
 ```
 
 And the MAE of the ARMA(3, 1):
 
 ```{r arma-2-week-2, echo=F, warning = F}
 arma_model_week <- function(t) {
-  model <- arima(o3_train_week[t[1:(size-1)]], order = c(3,0,1))
-  prediction = forecast(model, h=1)
+  model <- arima(o3_train_week[t[1:(size-4)]], order = c(3,0,1))
+  prediction = forecast(model, h=4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, arma_model_week)
-arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week, dates, size)
+arma_mae <- mae(o3_train_week[size:n], prediction[,4])
+output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction[,4], o3_train_week, dates, size)
 ```
 
 The second model seems a little better. So, let's check the residuals to observe it's problems. 
 
 ```{r}
-model <- arima(o3_train_week, order = c(2,0,1))
+model <- arima(o3_train_week, order = c(3,0,1))
 checkresiduals(model, lag = 2*freq, lag.max = 2*freq)
 ```
 
@@ -824,22 +838,22 @@ The ARMA seems to fit well as we can see so far. However, it's not capturing oth
 
 ```{r, echo=F}
 stl_arma_model_week <- function(t) {
-  model <- stl(ts(o3_train_week[t[1:(size-1)]], frequency = freq), 
+  model <- stl(ts(o3_train_week[t[1:(size-4)]], frequency = freq), 
                s.window = "periodic", robust = T)
-  prediction <- forecast(model, h = 1, method = 'arima')
+  prediction <- forecast(model, h = 4, method = 'arima')
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, stl_arma_model_week)
-stl_arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(stl_arma_mae, "STL + ARIMA prediction", prediction, o3_train_week, dates, size)
+stl_arma_mae <- mae(o3_train_week[size:n], prediction[,4])
+output_week(stl_arma_mae, "STL + ARIMA prediction", prediction[,4], o3_train_week, dates, size)
 ```
 
-In spite of the improvement in the STL model, the MAE isn't improved by this model when compared to ARMA best model. For that reason, this model was disregarded.
+It has improved STL and ARMA model error in the predictions! So we will take it forwards. 
 
 ### Comparing models in the test data. 
 
-We chose some of the best models to compare with the testing data. 
+We chose some of the best models to compare with the test data. 
 
 ```{r, echo = F}
 # n - k + 1 = size - 1 => k = n + 2 - size
@@ -852,19 +866,29 @@ n <- length(o3_test_week)
 t <- c(1:n)
 ```
 
+```{r baseline-week-test, echo=F}
+baseline_model_day <- function(t) {
+  return(as.numeric(o3_test_week[t[(size-4)]]))
+}
+
+prediction = rollapply(t, width = size, baseline_model_day)
+baseline_mae <- mae(o3_test_week[size:n], prediction)
+output(baseline_mae, "Baseline prediction", prediction, o3_test_week, dates = dates, size = size)
+```
 
 ```{r multiplicative-decompose-test-week, echo=F}
 data = log(o3_test_week + 1)
 stl_mul_model_week <- function(t) {
-  model <- stl(ts(data[t[1:(size-1)]], frequency = freq), 
+  model <- stl(ts(data[t[1:(size-4)]], frequency = freq), 
                s.window = "periodic", robust = T)
-  prediction = forecast(model, h=1)
+  prediction = forecast(model, h=4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, stl_mul_model_week)
-stl_mul_mae <- mae(o3_test_week[size:n], exp(prediction) - 1)
-output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction) - 1, o3_test_week, dates, size)
+stl_mul_mae <- mae(o3_test_week[size:n], exp(prediction[,4]) - 1)
+output_week(stl_mul_mae, "Multiplicative decompose prediction", 
+            exp(prediction[,4]) - 1, o3_test_week, dates, size)
 ```
 
 ```{r regression-test-week, echo=F}
@@ -872,9 +896,9 @@ Q = factor(c(rep(c(1:52), n/52), c(1:(n%%52))))
 
 regression_model_week <- function(t) {
   train = data.frame(
-    t = t[1:(size-1)],
-    o3_test_week = o3_test_week[t[1:(size-1)]],
-    Q = Q[t[1:(size-1)]]
+    t = t[1:(size-4)],
+    o3_test_week = o3_test_week[t[1:(size-4)]],
+    Q = Q[t[1:(size-4)]]
   )
   mod = lm(o3_test_week~t+Q, data = train)
   prediction = predict(mod, data.frame(t=t[size], Q=Q[t[size]]))
@@ -884,7 +908,8 @@ regression_model_week <- function(t) {
 prediction = rollapply(t, width = size, regression_model_week)
 regression_mae <- mae(o3_test_week[size:n], prediction)
 
-output_week(regression_mae, "Regression prediction", prediction, o3_test_week, dates, size)
+output_week(regression_mae, "Regression prediction", prediction, 
+            o3_test_week, dates, size)
 ```
 
 ```{r multiplicative-hw-test-week, echo=F}
@@ -893,35 +918,37 @@ hw_mult_model_week = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(data[t[1:(size-1)]], frequency = 52), beta = T, gamma = T, seasonal = "multiplicative")
-  prediction = forecast(mod, 1)
+  mod = HoltWinters(ts(data[t[1:(size-4)]], frequency = 52), 
+                    beta = T, gamma = T, seasonal = "multiplicative")
+  prediction = forecast(mod, 4)
   return(as.numeric(prediction$mean))
 }
 
 prediction = rollapply(t, width = size, hw_mult_model_week)
-hw_mult_mae <- mae(o3_test_week[size:n], prediction - 1)
+hw_mult_mae <- mae(o3_test_week[size:n], prediction[,4] - 1)
 
-output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 1, o3_test_week, dates, size)
+output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", 
+            prediction[,4] - 1, o3_test_week, dates, size)
 ```
 
-
-```{r arma-2-week-test, echo=F, warning = F}
-arma_model_week <- function(t) {
-  model <- arima(o3_test_week[t[1:(size-1)]], order = c(2,0,1))
-  prediction = forecast(model, h=1)
+```{r, echo=F}
+stl_arma_model_week <- function(t) {
+  model <- stl(ts(o3_test_week[t[1:(size-4)]], frequency = freq), 
+               s.window = "periodic", robust = T)
+  prediction <- forecast(model, h = 4, method = 'arima')
   return(as.numeric(prediction$mean))
 }
 
-prediction = rollapply(t, width = size, arma_model_week)
-arma_mae <- mae(o3_test_week[size:n], prediction)
-output(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_test_week, dates, size)
+prediction = rollapply(t, width = size, stl_arma_model_week)
+arma_mae <- mae(o3_test_week[size:n], prediction[,4])
+output_week(arma_mae, "STL + ARIMA prediction", prediction[,4], o3_test_week, dates, size)
 ```
 
 Finally, we have this bar graphic to compare the values: 
 
 ```{r, echo=FALSE}
-models = c('STL', 'Regression', 'HW', 'ARIMA')
-mae_result <- c(stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
+models = c('Baseline', 'STL', 'Regression', 'HW', 'ARIMA')
+mae_result <- c(baseline_mae, stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
 mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
