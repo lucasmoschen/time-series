@@ -505,6 +505,7 @@ o3_week <- c(1:floor(length(o3.clean)/7))
 for(i in seq(1,length(o3.clean)-7, 7)){
   o3_week[ceiling(i/7)] = mean(o3.clean[i:(i+6)])
 }
+dates = seq(from = as.Date(time(o3[1])), to = as.Date(time(o3[length(o3)])), by = "weeks")[1:782]
 
 plot(ts(o3_week), main = 'Weekly average level of O3 in Boston (after imputation)', 
      xlab = 'Week', ylab = 'Kg/m3')
@@ -531,11 +532,11 @@ baseline_model_week <- function(t) {
 prediction = rollapply(t, width = size, baseline_model_week)
 baseline_mae <- mae(o3_train[size:n], prediction)
 
-output_week = function(mae, title, prediction, data) {
+output_week = function(mae, title, prediction, data, dates, size) {
   print(mae)
-  plot(c(1:n), data,
+  plot(dates[1:length(data)], data,
        main = title, xlab = "t")
-  lines(c(size:n), prediction, col="red", lwd = 1)
+  lines(dates[size:length(data)], prediction, col="red", lwd = 1)
   legend(
     x = 1,
     y = 0.07,
@@ -546,7 +547,7 @@ output_week = function(mae, title, prediction, data) {
   )
 }
 
-output_week(baseline_mae, "Baseline model prediction", prediction, o3_train_week)
+output_week(baseline_mae, "Baseline model prediction", prediction, o3_train_week, dates, size)
 ```
 
 ### Decompose
@@ -580,7 +581,7 @@ stl_add_model_week <- function(t) {
 prediction = rollapply(t, width = size, stl_add_model_week)
 stl_add_mae <- mae(o3_train_week[size:n], prediction)
 
-output_week(stl_add_mae, "Additive decompose prediction", prediction, o3_train_week)
+output_week(stl_add_mae, "Additive decompose prediction", prediction, o3_train_week, dates, size)
 ```
 
 We fit the model using `t.window` and analyse the reminder:
@@ -618,7 +619,7 @@ prediction = rollapply(t, width = size, stl_mul_model_week)
 stl_mul_mae <- mae(o3_train_week[size:n], exp(prediction) - 1)
 
 
-output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction) - 1, o3_train_week)
+output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction) - 1, o3_train_week, dates, size)
 ```
 
 Using `t.window` and analysing the reminder:
@@ -663,7 +664,7 @@ regression_model_week <- function(t) {
 prediction = rollapply(t, width = size, regression_model_week)
 regression_mae <- mae(o3_train_week[size:n], prediction)
 
-output_week(regression_mae, "Regression prediction", prediction, o3_train_week)
+output_week(regression_mae, "Regression prediction", prediction, o3_train_week, dates, size)
 ```
 
 Now we analyse the residuals.
@@ -699,7 +700,7 @@ hw_add_model_week = function(t) {
 prediction = rollapply(t, width = size, hw_add_model_week)
 hw_add_mae <- mae(o3_train_week[size:n], prediction)
 
-output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction, o3_train_week)
+output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction, o3_train_week, dates, size)
 ```
 
 MAE is not so good as the other models seen so far. We see some kind of explosion in the resulting graph. We know that HW tends to "explode". We have seem better results. Let's analyse the residuals:
@@ -727,7 +728,7 @@ hw_mult_model_week = function(t) {
 prediction = rollapply(t, width = size, hw_mult_model_week)
 hw_mult_mae <- mae(o3_train_week[size:n], prediction - 1)
 
-output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 1, o3_train_week)
+output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 1, o3_train_week, dates, size)
 ```
 
 We see also a not so good MAE and graph. Let's analyse the residuals:
@@ -772,7 +773,7 @@ arma_model_week <- function(t) {
 }
 prediction = rollapply(t, width = size, arma_model_week)
 arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week)
+output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week, dates, size)
 ```
 
 And the MAE of the ARMA(2, 1):
@@ -786,7 +787,7 @@ arma_model_week <- function(t) {
 
 prediction = rollapply(t, width = size, arma_model_week)
 arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_train_week)
+output_week(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_train_week, dates, size)
 ```
 
 And the MAE of the ARMA(3, 1):
@@ -800,7 +801,7 @@ arma_model_week <- function(t) {
 
 prediction = rollapply(t, width = size, arma_model_week)
 arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week)
+output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week, dates, size)
 ```
 
 The second model seems a little better. So, let's check the residuals to observe it's problems. 
@@ -826,7 +827,7 @@ stl_arma_model_week <- function(t) {
 
 prediction = rollapply(t, width = size, stl_arma_model_week)
 stl_arma_mae <- mae(o3_train_week[size:n], prediction)
-output_week(stl_arma_mae, "STL + ARIMA prediction", prediction, o3_train_week)
+output_week(stl_arma_mae, "STL + ARIMA prediction", prediction, o3_train_week, dates, size)
 ```
 
 In spite of the improvement in the STL model, the MAE isn't improved by this model when compared to ARMA best model. For that reason, this model was disregarded.
@@ -839,6 +840,7 @@ We chose some of the best models to compare with the testing data.
 # n - k + 1 = size - 1 => k = n + 2 - size
 # we want o3_test(new)[size] = o3_test(old)[size] 
 o3_test_week = c(o3_train_week[(n+2-size):n], o3_test_week)
+dates = dates[(n+2-size):length(dates)]
 
 # updating n and t
 n <- length(o3_test_week)
@@ -857,7 +859,7 @@ stl_mul_model_week <- function(t) {
 
 prediction = rollapply(t, width = size, stl_mul_model_week)
 stl_mul_mae <- mae(o3_test_week[size:n], exp(prediction) - 1)
-output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction) - 1, o3_test_week)
+output_week(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction) - 1, o3_test_week, dates, size)
 ```
 
 ```{r regression-test-week, echo=F}
@@ -877,7 +879,7 @@ regression_model_week <- function(t) {
 prediction = rollapply(t, width = size, regression_model_week)
 regression_mae <- mae(o3_test_week[size:n], prediction)
 
-output_week(regression_mae, "Regression prediction", prediction, o3_test_week)
+output_week(regression_mae, "Regression prediction", prediction, o3_test_week, dates, size)
 ```
 
 ```{r multiplicative-hw-test-week, echo=F}
@@ -894,7 +896,7 @@ hw_mult_model_week = function(t) {
 prediction = rollapply(t, width = size, hw_mult_model_week)
 hw_mult_mae <- mae(o3_test_week[size:n], prediction - 1)
 
-output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 1, o3_test_week)
+output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction - 1, o3_test_week, dates, size)
 ```
 
 
@@ -907,7 +909,7 @@ arma_model_week <- function(t) {
 
 prediction = rollapply(t, width = size, arma_model_week)
 arma_mae <- mae(o3_test_week[size:n], prediction)
-output(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_test_week)
+output(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_test_week, dates, size)
 ```
 
 Finally, we have this bar graphic to compare the values: 
