@@ -497,7 +497,7 @@ mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Modelos', y = 'MAE', 
-      title = 'Comparando MAE para os modelos') + 
+      title = "Comparing model's MAE in test data") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -924,7 +924,7 @@ mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
   labs(x = 'Modelos', y = 'MAE', 
-      title = 'Comparando MAE para os modelos') + 
+      title = "Comparing model's MAE in test data") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
