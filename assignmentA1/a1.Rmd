@@ -25,6 +25,13 @@ plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston',
                                   xlab = 'Date', ylab = 'Kg/m3')
 ```
 
+## Methodology 
+
+1. Data treatment: analyse missing and duplicated data. 
+2. Compare the daily models: we use rollyaaply using 2 years + 6 days to predict the day, that is, we use $\{X_t\}_{t-2\cdot365}^t$ to predict $X_{t+7}$. We calcute, for each $t > 2\cdot365 + 6$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+3. Compare the weekly models: we use rollyapply using 2 years + 1 week to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+1}$. We calcute, for each $t > 2\cdot52 + 1$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+4. Compare the best models for the 2 cases in the test data using the same approach. 
+
 ## Data treatment
 
 We noticed that some days do not exist in the dataset, for example, the day August 31, 2001 does not have information in the dataset. 
