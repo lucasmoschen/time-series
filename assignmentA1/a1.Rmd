@@ -775,7 +775,7 @@ output_week(arma_mae, "ARIMA(3,0,1) prediction", prediction, o3_train_week)
 
 And the MAE of the ARMA(2, 1):
 
-```{r arma-2-week, echo=F, warning = F}
+```{r arma-2-week-1, echo=F, warning = F}
 arma_model_week <- function(t) {
   model <- arima(o3_train_week[t[1:(size-1)]], order = c(2,0,1))
   prediction = forecast(model, h=1)
@@ -789,7 +789,7 @@ output_week(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_train_week)
 
 And the MAE of the ARMA(3, 1):
 
-```{r arma-2-week, echo=F, warning = F}
+```{r arma-2-week-2, echo=F, warning = F}
 arma_model_week <- function(t) {
   model <- arima(o3_train_week[t[1:(size-1)]], order = c(3,0,1))
   prediction = forecast(model, h=1)
