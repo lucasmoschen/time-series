@@ -99,7 +99,7 @@ We will do the naive forecast to the baseline model.
 
 ```{r baseline, echo=F}
 baseline_model_day <- function(t) {
-  return(as.numeric(o3_train[(size-7)]))
+  return(as.numeric(o3_train[t[(size-7)]]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_day)
@@ -335,8 +335,8 @@ $$
 where $k = p + q + 2$ and $\hat{L}$ is the maximum value of the likelihood for the model. 
 
 ```{r, echo=F}
+summary(arma(o3_train, order = c(1,2)))
 summary(arma(o3_train, order = c(2,1)))
-summary(arma(o3_train, order = c(3,1)))
 summary(arma(o3_train, order = c(3,2)))
 summary(arma(o3_train, order = c(4,3)))
 summary(arma(o3_train, order = c(4,2)))
@@ -361,7 +361,7 @@ And the MAE of the ARIMA(3, 0, 2):
 
 ```{r arma-2, echo=F, warning = F}
 arma_model_day <- function(t) {
-  model <- arima(o3_train[t[1:(size-7)]], order = c(3,0,2))
+  model <- arima(o3_train[t[1:(size-7)]], order = c(1,0,2))
   prediction = forecast(model, h=7)
   return(as.numeric(prediction$mean))
 }
@@ -523,12 +523,12 @@ We will do the naive forecast to the baseline model.
 
 ```{r baseline-week, echo=F}
 baseline_model_week <- function(t) {
-  return(as.numeric(o3_train_week[(size-1)]))
+  return(as.numeric(o3_train_week[t[(size-1)]]))
 }
 
 prediction = rollapply(t, width = size, baseline_model_week)
 baseline_mae <- mae(o3_train[size:n], prediction)
-
+  
 output_week = function(mae, title, prediction, data) {
   print(mae)
   plot(c(1:n), data,
@@ -905,7 +905,7 @@ arma_model_week <- function(t) {
 
 prediction = rollapply(t, width = size, arma_model_week)
 arma_mae <- mae(o3_test_week[size:n], prediction)
-output(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_test_week)
+output_week(arma_mae, "ARIMA(2,0,1) prediction", prediction, o3_test_week)
 ```
 
 Finally, we have this bar graphic to compare the values: 
