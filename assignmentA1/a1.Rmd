@@ -168,7 +168,17 @@ stl_add_model_day <- function(t) {
 prediction = rollapply(t, width = size, stl_add_model_day)
 stl_add_mae <- mae(o3_train[size:n], prediction[,7])
 
-output(stl_add_mae, "Additive decompose prediction", prediction[,7], o3_train, dates, size)
+output(stl_add_mae, "Additive decompose 7 day forward", prediction[,7], o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+plot(mae_compare)
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -203,7 +213,17 @@ stl_mul_model_day <- function(t) {
 prediction = rollapply(t, width = size, stl_mul_model_day)
 stl_mul_mae <- mae(o3_train[size:n], exp(prediction[,7]) - 1)
 
-output(stl_mul_mae, "Multiplicative decompose prediction", exp(prediction[,7]) - 1, o3_train, dates, size)
+output(stl_mul_mae, "Multiplicative decompose 7 days forward", exp(prediction[,7]) - 1, o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+plot(mae_compare)
 ```
 
 We also can fit the model using `t.window` and analyse the reminder of the method. 
@@ -282,7 +302,17 @@ hw_add_model_day = function(t) {
 prediction = rollapply(t, width = size, hw_add_model_day)
 hw_add_mae <- mae(o3_train[size:n], prediction[,7])
 
-output(hw_add_mae, "Additive Holt-Winters prediction", prediction[,7], o3_train, dates, size)
+output(hw_add_mae, "Additive Holt-Winters 7 day forward", prediction[,7], o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+plot(mae_compare)
 ```
 
 MAE is not so good, nor is the resulting graph. HW tends to "explode". We have seem better results. Let's analyse the residuals:
@@ -310,7 +340,17 @@ hw_mult_model_day = function(t) {
 prediction = rollapply(t, width = size, hw_mult_model_day)
 hw_mult_mae <- mae(o3_train[size:n], prediction[,7] - 1)
 
-output(hw_mult_mae, "Multiplicative Holt-Winters prediction", prediction[,7] - 1, o3_train, dates, size)
+output(hw_mult_mae, "Multiplicative Holt-Winters 7 days forward", prediction[,7] - 1, o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+plot(mae_compare)
 ```
 
 We see also a not so good MAE and graph. Let's analyse the residuals of an model fitted in all training data:
@@ -373,7 +413,17 @@ arma_model_day <- function(t) {
 }
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(arma_mae, "ARIMA(3,0,1) prediction", prediction[,7], o3_train, dates, size)
+output(arma_mae, "ARIMA(3,0,1) 7 days forward", prediction[,7], o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+plot(mae_compare)
 ```
 
 And the MAE of the ARIMA(2, 0, 3):
@@ -387,7 +437,17 @@ arma_model_day <- function(t) {
 
 prediction = rollapply(t, width = size, arma_model_day)
 arma_mae <- mae(o3_train[size:n], prediction[,7])
-output(arma_mae, "ARIMA(2,0,3) prediction", prediction[,7], o3_train, dates, size)
+output(arma_mae, "ARIMA(2,0,3) 7 days forward", prediction[,7], o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+plot(mae_compare)
 ```
 
 The first model seems a little better. So, let's check the residuals to observe it's problems. 
@@ -727,7 +787,7 @@ hw_add_model_week = function(t) {
 prediction = rollapply(t, width = size, hw_add_model_week)
 hw_add_mae <- mae(o3_train_week[size:n], prediction[,4])
 
-output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction, o3_train_week, dates, size)
+output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction[,4], o3_train_week, dates, size)
 ```
 
 MAE is not so good as the other models seen so far. We see some kind of explosion in the resulting graph. We know that HW tends to "explode". We have seem better results. Let's analyse the residuals:
