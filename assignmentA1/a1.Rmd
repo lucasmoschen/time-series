@@ -28,8 +28,8 @@ plot(bos$Date.Local, bos$O3.Mean, main = 'Daily average level of O3 in Boston',
 ## Methodology 
 
 1. Data treatment: analyse missing and duplicated data. 
-2. Compare the daily models: we use rollyaaply using 2 years + 6 days to predict the day, that is, we use $\{X_t\}_{t-2\cdot365}^t$ to predict $X_{t+7}$. We calcute, for each $t > 2\cdot365 + 6$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
-3. Compare the weekly models: we use rollyapply using 2 years + 1 week to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+1}$. We calcute, for each $t > 2\cdot52 + 1$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+2. Compare the daily models: we use rollapply using 2 years + 6 days to predict the day, that is, we use $\{X_t\}_{t-2\cdot365}^t$ to predict $X_{t+7}$. We calcute, for each $t > 2\cdot365 + 6$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
+3. Compare the weekly models: we use rollapply using 2 years + 1 week to predict the week, that is, we use $\{X_t\}_{t-2\cdot52}^t$ to predict $X_{t+1}$. We calcute, for each $t > 2\cdot52 + 1$, $|\hat{X}_{t} - X_t|$ and after calculate $\sum_t |\hat{X}_{t} - X_t|$. We used Decomposition, Regression, Holt-Winters and ARMA. 
 4. Compare the best models for the 2 cases in the test data using the same approach. 
 
 ## Data treatment
@@ -409,7 +409,7 @@ However the MAE isn't improved by this model. For that reason, this model was di
 
 ### Comparing models in the test data. 
 
-We chose some of the best models to compare with the testing data. 
+We chose some of the best models to compare with the test data. 
 
 ```{r, echo = F}
 # n - k + 1 = size - 1 => k = n + 2 - size
@@ -839,7 +839,7 @@ In spite of the improvement in the STL model, the MAE isn't improved by this mod
 
 ### Comparing models in the test data. 
 
-We chose some of the best models to compare with the testing data. 
+We chose some of the best models to compare with the test data. 
 
 ```{r, echo = F}
 # n - k + 1 = size - 1 => k = n + 2 - size
