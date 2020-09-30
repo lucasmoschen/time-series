@@ -199,7 +199,7 @@ We see that there are a big spike when $\text{lag} = 365$. It seems not so good 
 
 #### Multiplicative model 
 
-First we analyse the MAE using the `rollyapply` again. 
+First we analyse the MAE using the `rollapply` again. 
 
 ```{r multiplicative-decompose, echo=F}
 data = log(o3_train + 1)
@@ -577,7 +577,7 @@ mae_result <- c(baseline_mae, stl_mul_mae, regression_mae, hw_mult_mae, arma_mae
 mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
-  labs(x = 'Modelos', y = 'MAE', 
+  labs(x = 'Models', y = 'MAE', 
       title = "Comparing model's MAE in test data") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -1010,12 +1010,12 @@ output_week(arma_mae, "STL + ARIMA prediction", prediction[,4], o3_test_week, da
 Finally, we have this bar graphic to compare the values: 
 
 ```{r, echo=FALSE}
-models = c('Baseline', 'STL', 'Regression', 'HW', 'ARIMA')
+models = c('Baseline', 'STL', 'Regression', 'HW', 'ARIMA + STL')
 mae_result <- c(baseline_mae, stl_mul_mae, regression_mae, hw_mult_mae, arma_mae)
 mae_all <- data.frame(Model = models, MAE = mae_result)
 ggplot(mae_all) + 
   geom_bar( aes(x = Model, y = MAE), stat = 'identity', fill="forestgreen", alpha=0.5) + 
-  labs(x = 'Modelos', y = 'MAE', 
+  labs(x = 'Models', y = 'MAE', 
       title = "Comparing model's MAE in test data") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
