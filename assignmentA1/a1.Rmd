@@ -45,7 +45,7 @@ Obs.: When applying logarithm, we applied $\log(X_t + 1)$, because there are $0$
 We noticed that some days do not exist in the dataset, for example, the day August 31, 2001 does not have information in the dataset. 
 
 ```{r, echo = F}
-bos[148:153,]
+bos[148:153,]
 ```
 
 Also, there is duplicated days, as June 9, 2002: 
@@ -300,7 +300,8 @@ hw_add_model_day = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "additive")
+  # We had many difficulties fitting a Holt-Winters model. So we chose alpha and beta using the whole training dataset (doing little modifications) and we let the HoltWinters function optimize gamma. We found it a reasonable choice.
+  mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), alpha = 0.02216133, beta = 0.001, gamma = NULL, seasonal = "additive", optim.start = c(0.02216133, 0, 0.2962739))
   prediction = forecast(mod, 7)
   return(as.numeric(prediction$mean))
 }
@@ -326,7 +327,7 @@ barplot(mae_compare, names.arg = c(1:7),
 MAE is not so good, nor is the resulting graph. HW tends to "explode". We have seem better results. Let's analyse the residuals:
 
 ```{r}
-mod = HoltWinters(ts(o3_train, frequency = 365), beta = T, gamma = T, seasonal = "additive")
+mod = HoltWinters(ts(o3_train, frequency = 365), seasonal = "additive")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
@@ -340,7 +341,8 @@ hw_mult_model_day = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+  # We had many difficulties fitting a Holt-Winters model. So we chose alpha and beta using the whole training dataset (doing little modifications) and we let the HoltWinters function optimize gamma. We found it a reasonable choice.
+  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), alpha = 0.02306014, beta = 0.001, gamma = NULL, seasonal = "multiplicative")
   prediction = forecast(mod, 7)
   return(as.numeric(prediction$mean))
 }
@@ -356,7 +358,7 @@ Next we compare the MAE chan changing the day from 1 to 7.
 ```{r, echo = F}
 mae_compare <- c(1:7)
 for (i in mae_compare) {
-  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i] - 1)
 }
 barplot(mae_compare, names.arg = c(1:7), 
         main = 'MAE in the train data for different lags', 
@@ -366,7 +368,7 @@ barplot(mae_compare, names.arg = c(1:7),
 We see also a not so good MAE and graph. Let's analyse the residuals of an model fitted in all training data:
 
 ```{r}
-mod = HoltWinters(ts(o3_train+1, frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+mod = HoltWinters(ts(o3_train+1, frequency = 365), seasonal = "multiplicative")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
@@ -560,7 +562,7 @@ hw_mult_model_day = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), beta = T, gamma = T, seasonal = "multiplicative")
+  mod = HoltWinters(ts(data[t[1:(size-7)]], frequency = 365), alpha = 0.02306014, beta = 0.001, gamma = NULL, seasonal = "multiplicative")
   prediction = forecast(mod, 7)
   return(as.numeric(prediction$mean))
 }
@@ -792,8 +794,8 @@ hw_add_model_week = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(o3_train_week[t[1:(size-4)]], frequency = 52), 
-                    beta = T, gamma = T, seasonal = "additive")
+  # We had many difficulties fitting a Holt-Winters model. So we chose alpha and beta using the whole training dataset (doing little modifications) and we let the HoltWinters function optimize gamma. We found it a reasonable choice.
+  mod = HoltWinters(ts(o3_train_week[t[1:(size-4)]], frequency = 52), alpha = 0.03640345, beta = 0.003648801, gamma = NULL, seasonal = "additive")
   prediction = forecast(mod, h=4)
   return(as.numeric(prediction$mean))
 }
@@ -807,7 +809,7 @@ output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction[,4], o3_t
 MAE is not so good as the other models seen so far. We see some kind of explosion in the resulting graph. We know that HW tends to "explode". We have seem better results. Let's analyse the residuals:
 
 ```{r}
-mod = HoltWinters(ts(o3_train_week, frequency = 52), beta = T, gamma = T, seasonal = "additive")
+mod = HoltWinters(ts(o3_train_week, frequency = 52), seasonal = "additive")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
@@ -821,8 +823,8 @@ hw_mult_model_week = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(data[t[1:(size-4)]], frequency = 52), 
-                    beta = T, gamma = T, seasonal = "multiplicative")
+  # We had many difficulties fitting a Holt-Winters model. So we chose alpha and beta using the whole training dataset (doing little modifications) and we let the HoltWinters function optimize gamma. We found it a reasonable choice.
+  mod = HoltWinters(ts(data[t[1:(size-4)]], frequency = 52), alpha = 0.01237447, beta = 0.003307011, gamma = NULL, seasonal = "multiplicative")
   prediction = forecast(mod, h=4)
   return(as.numeric(prediction$mean))
 }
@@ -837,7 +839,7 @@ output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction",
 We see also a not so good MAE and graph. Let's analyse the residuals:
 
 ```{r}
-mod = HoltWinters(ts(o3_train_week, frequency = 52), beta = T, gamma = T, seasonal = "multiplicative")
+mod = HoltWinters(ts(o3_train_week, frequency = 52), seasonal = "multiplicative")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
@@ -995,8 +997,8 @@ hw_mult_model_week = function(t) {
   # if (t[1] %% 100 == 0) {
   #   print(t[1]/n)
   # }
-  mod = HoltWinters(ts(data[t[1:(size-4)]], frequency = 52), 
-                    beta = T, gamma = T, seasonal = "multiplicative")
+  # We had many difficulties fitting a Holt-Winters model. So we chose alpha and beta using the whole training dataset (doing little modifications) and we let the HoltWinters function optimize gamma. We found it a reasonable choice.
+  mod = HoltWinters(ts(data[t[1:(size-4)]], frequency = 52), alpha = 0.01237447, beta = 0.003307011, gamma = NULL, seasonal = "multiplicative")
   prediction = forecast(mod, 4)
   return(as.numeric(prediction$mean))
 }
