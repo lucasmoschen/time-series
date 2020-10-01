@@ -338,7 +338,7 @@ barplot(mae_compare, names.arg = c(1:7),
         xlab = 'Lags', ylab = 'MAE')
 ```
 
-MAE is not so good, nor is the resulting graph. HW tends to "explode". We have seem better results. Let's analyse the residuals:
+MAE is kind of good, so is the resulting graph, but we have seem better results. Let's analyse the residuals:
 
 ```{r, warning=F}
 mod = HoltWinters(ts(o3_train, frequency = 365), seasonal = "additive")
@@ -379,7 +379,7 @@ barplot(mae_compare, names.arg = c(1:7),
         xlab = 'Lags', ylab = 'MAE')
 ```
 
-We see also a not so good MAE and graph. Let's analyse the residuals of an model fitted in all training data:
+The MAE is not so bad. Let's analyse the residuals of an model fitted in all training data:
 
 ```{r, warning = F}
 mod = HoltWinters(ts(o3_train+1, frequency = 365), seasonal = "multiplicative")
@@ -612,6 +612,8 @@ ggplot(mae_all) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+We see that our models performed reasonably, highlighted the ARIMA (in fact ARMA) model.
+
 ## Models: case 2 
 
 In case two, we have to aggregate the diary days in a week, starting from the sunday, as requested. So we calculate the mean value in the week to be its representant. The models may be very similar to the previous. We may see less outliers. We also will separate train and test data. The first day in the data is April 1, 2001, a Sunday. So we do not worry about that. 
@@ -715,7 +717,7 @@ The ACF and the PACF of the reminder:
 checkresiduals(model$time.series[,3])
 ```
 
-We see a big spike when $\text{lag} = 52$. It seems not so good for a reminder
+We see a big spike when $\text{lag} = 52$. It seems not so good for a reminder.
 
 #### Multiplicative model 
 
@@ -820,7 +822,7 @@ hw_add_mae <- mae(o3_train_week[size:n], prediction[,4])
 output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction[,4], o3_train_week, dates, size)
 ```
 
-MAE is not so good as the other models seen so far. We see some kind of explosion in the resulting graph. We know that HW tends to "explode". We have seem better results. Let's analyse the residuals:
+MAE is not so bad, but we have seen better results. Let's analyse the residuals:
 
 ```{r, warning=F}
 mod = HoltWinters(ts(o3_train_week, frequency = 52), seasonal = "additive")
@@ -850,7 +852,7 @@ output_week(hw_mult_mae, "Multiplicative Holt-Winters prediction",
             prediction[,4] - 1, o3_train_week, dates, size)
 ```
 
-We see also a not so good MAE and graph. Let's analyse the residuals:
+We see also a reasonable MAE. Let's analyse the residuals:
 
 ```{r}
 mod = HoltWinters(ts(o3_train_week, frequency = 52), seasonal = "multiplicative")
@@ -1050,3 +1052,4 @@ ggplot(mae_all) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+It's somewhat impressive that the model with the best performance was the regression. But the other models also did well.
