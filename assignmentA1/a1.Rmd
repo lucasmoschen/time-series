@@ -45,7 +45,7 @@ Obs.: When applying logarithm, we applied $\log(X_t + 1)$, because there are $0$
 We noticed that some days do not exist in the dataset, for example, the day August 31, 2001 does not have information in the dataset. 
 
 ```{r, echo = F}
-bos[148:153,]
+bos[148:153,]
 ```
 
 Also, there is duplicated days, as June 9, 2002: 
@@ -313,7 +313,9 @@ hw_add_model_day = function(t) {
   #   print(t[1]/n)
   # }
   # We had many difficulties fitting a Holt-Winters model. So we chose alpha and beta using the whole training dataset (doing little modifications) and we let the HoltWinters function optimize gamma. We found it a reasonable choice.
-  mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), alpha = 0.02216133, beta = 0.001, gamma = NULL, seasonal = "additive", optim.start = c(0.02216133, 0, 0.2962739))
+  mod = HoltWinters(ts(o3_train[t[1:(size-7)]], frequency = 365), 
+                    beta = 0.001, gamma = NULL, seasonal = "additive", alpha = 0.02216133,
+                    optim.start = c(gamma = 0.2962739))
   prediction = forecast(mod, 7)
   return(as.numeric(prediction$mean))
 }
@@ -338,12 +340,12 @@ barplot(mae_compare, names.arg = c(1:7),
 
 MAE is not so good, nor is the resulting graph. HW tends to "explode". We have seem better results. Let's analyse the residuals:
 
-```{r}
+```{r, warning=F}
 mod = HoltWinters(ts(o3_train, frequency = 365), seasonal = "additive")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
-We see the same problems as before: high correlated $\text{lag}=365, 730$, evidence of this not beeing a WN.
+We see the optimization is a huge problem in this case, and we need more background on optimization, when we use `rollapply`. We expect around $0.05*730 = 37$ spikes out of the confidence interval. It seems a little higher than that, but the residuals are pretty similar to the normal distribution. The spike around $\text{lag} = 365$ is really strange, because the model seems not capture this seasonality. 
 
 #### Multiplicative
 
@@ -379,12 +381,12 @@ barplot(mae_compare, names.arg = c(1:7),
 
 We see also a not so good MAE and graph. Let's analyse the residuals of an model fitted in all training data:
 
-```{r}
+```{r, warning = F}
 mod = HoltWinters(ts(o3_train+1, frequency = 365), seasonal = "multiplicative")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
-Same problems as before. Holt-Winters doesn't appear to work well in this case.
+Same problems as before. We see the optimization is a huge problem in this case, and we need more background on optimization, when we use `rollapply`. We expect around $0.05*730 = 37$ spikes out of the confidence interval. It seems a little higher than that, but the residuals are pretty similar to the normal distribution. 
 
 ### ARMA
 
@@ -820,12 +822,12 @@ output_week(hw_add_mae, "Additive Holt-Winters prediction", prediction[,4], o3_t
 
 MAE is not so good as the other models seen so far. We see some kind of explosion in the resulting graph. We know that HW tends to "explode". We have seem better results. Let's analyse the residuals:
 
-```{r}
+```{r, warning=F}
 mod = HoltWinters(ts(o3_train_week, frequency = 52), seasonal = "additive")
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
-We see the same problems as before: high correlated $\text{lag}=52, 104$, evidence of this not beeing a WN.
+The residuals are pretty good actually. We see a norm histogram and the spikes above the lines, almost all, and we expected around 5 be higher. So, that model sounds good considering the residuals. 
 
 #### Multiplicative
 
@@ -855,7 +857,7 @@ mod = HoltWinters(ts(o3_train_week, frequency = 52), seasonal = "multiplicative"
 checkresiduals(mod, lag = 2*freq, lag.max = 2*freq)
 ```
 
-Same problems as before. Holt-Winters doesn't appear to work well in this case.
+The same as before, except the fact the the ACF of the remainder seems to be a AR model, what is interesting. 
 
 ### ARMA
 
