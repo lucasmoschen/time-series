@@ -265,14 +265,26 @@ regression_model_day <- function(t) {
     Q = Q[t[1:(size-7)]]
   )
   mod = lm(o3_train~t+Q, data = train)
-  prediction = predict(mod, data.frame(t=t[size], Q=Q[t[size]]))
+  prediction = predict(mod, data.frame(t=t[c((size - 6):size)], Q=Q[t[c((size - 6):size)]]))
   return(prediction)
 }
 
 prediction = rollapply(t, width = size, regression_model_day)
-regression_mae <- mae(o3_train[size:n], prediction)
+regression_mae <- mae(o3_train[size:n], prediction[,7])
 
-output(regression_mae, "Regression prediction", prediction, o3_train, dates, size)
+output(regression_mae, "Regression 7 days forward", prediction[,7], o3_train, dates, size)
+```
+
+Next we compare the MAE chan changing the day from 1 to 7. 
+
+```{r, echo = F}
+mae_compare <- c(1:7)
+for (i in mae_compare) {
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+}
+barplot(mae_compare, names.arg = c(1:7), 
+        main = 'MAE in the train data for different lags', 
+        xlab = 'Lags', ylab = 'MAE')
 ```
 
 Now we analyse the residuals. We fit a LM model in all training data in order to analyse it.
