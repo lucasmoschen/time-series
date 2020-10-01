@@ -225,7 +225,7 @@ Next we compare the MAE chan changing the day from 1 to 7.
 ```{r, echo = F}
 mae_compare <- c(1:7)
 for (i in mae_compare) {
-  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], exp(prediction[,i]) - 1)
 }
 barplot(mae_compare, names.arg = c(1:7), 
         main = 'MAE in the train data for different lags', 
@@ -368,7 +368,7 @@ Next we compare the MAE chan changing the day from 1 to 7.
 ```{r, echo = F}
 mae_compare <- c(1:7)
 for (i in mae_compare) {
-  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i])
+  mae_compare[i] = mae(o3_train[(size-7+i):(n-7+i)], prediction[,i] - 1)
 }
 barplot(mae_compare, names.arg = c(1:7), 
         main = 'MAE in the train data for different lags', 
