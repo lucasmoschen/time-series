@@ -1,3 +1,10 @@
+# Trabalho Séries Temporais A1 
+
+## Lucas Emanuel Resck Domingues
+## Lucas Machado Moschen
+
+## 30/09/2020
+
 ## ----echo = F, warning = F, message=F-----------------------------------------------------------------
 library(zoo)
 library(dplyr)
