@@ -1,0 +1,26 @@
+---
+title: "Identificação de Modelos ARIMA"
+author: "Lucas Resck e Lucas Moschen"
+date: \today
+output: pdf_document
+---
+
+# Instruções 
+
+1. Solucione as questões do livro:
+
+- Cap 5: 30, 31 e 32 ( e Sugerido 36)
+- Cap 6: 1
+
+2. Simulação da distribuição da estatística de teste de Dickey-Fuller
+Acesse o livro 'Econometria de Séries Temporais' 2a. Edição do Rodrigo de Losso Bueno na "Minha Biblioteca"
+Leia Cap 4.5.1, 4.5.2 e 4.5.3, Pag 116 [(ou 134 online)](https://integrada.minhabiblioteca.com.br/#/books/9788522128259/pageid/134)
+
+2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, apõs eq (2) com $\phi_1 = 0.8$
+
+2.2 Repita a simulação, mas agora adicione termos autoregressivos no modelo, verifique que a distribuição da estatística de teste permanece inalterada
+
+2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
+
+3. Identificação do modelo: Identifique o modelo ARIMA para a série de dados de inflação 
+
