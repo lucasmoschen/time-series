@@ -7,10 +7,62 @@ output: pdf_document
 
 # Instruções 
 
-1. Solucione as questões do livro:
+1. (Questão 30 - 5) Considere o modelo abaixo. Prove que, se $m > d$: 
 
-- Cap 5: 30, 31 e 32 ( e Sugerido 36)
-- Cap 6: 1
+$$
+Z_t = \sum_{j=0}^m \beta_j t^j  + \frac{\theta(B)}{\phi(B)\Delta^d}a_t
+$$
+
+Temos que $\Delta^d Z_t = (1 - B)^d Z_t = \sum_{k=0}^d {d\choose k}(-1)^kB^k Z_t$, usando o binômio de Newton. Em particular: 
+$$
+\begin{split}
+\Delta^d t^j &= \sum_{k=0}^d {d\choose k}(-1)^kB^k t^j \\
+&= \sum_{k=0}^d {d\choose k}(-1)^k(t-k)^j \\
+&= \sum_{k=0}^d {d\choose k}(-1)^k\sum_{i=0}^j{j\choose i}t^ik^{j-i}(-1)^{j-i} \\
+&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}\sum_{k=0}^d {d \choose k}(-1)^{d-k}(d-k)^{j-i}, \text{ redefinindo } k = d-k \\
+&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}\sum_{k=0}^d {d \choose k}(-1)^{d-k}(d-k)^{j-i} \\
+&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}d!(-1)^d\begin{Bmatrix}j-i \\ d\end{Bmatrix}, \text{ onde o úmtimo é o n° de Stirling de 2° tipo}
+\end{split}
+$$
+
+
+Sabemos que se $d > j - i \implies i > j - d$, o número de Stirling é $0$, isto é, $\Delta^d t^j$ é um polinômio de ordem $(j - d)^+$. Em particular, se $d > j$, teremos um polinômio de ordem $0$. 
+
+a. Tomando-se $d$ diferenças,  obtemos um modelo não estacionário, com uma tendência polinomial de grau $m-d = h$. 
+
+$$
+\Delta^d Z_t = \sum_{j=0}^m \beta_j \Delta^d t^j + \frac{\theta(B)}{\phi(B)}a_t
+$$
+Defina $m -d = h > 0$. Quando $j=m$, teremos que $\Delta^d t^m$ será um polinômio de ordem $h$, pelo que vimos acima, dado que o número de Stirling é diferente de $0$.   
+
+b. Tomando-se $m$ diferenças obteremos um processo estacionário não invertível. 
+
+Tomando $m$ diferenças, teremos um polinômio de ordem $0$. Seja, então, se olharmos a forma acima, o único valor diferente de $0$ será quando $i=0, j = d = m$. 
+
+$$
+\Delta^m Z_t = \beta_dd! + \frac{\theta(B)}{\phi(B)}a_t
+$$
+
+Esse processo não é invertível porque não podemos escrever $a_t = \pi(B)Z_t$, dado à presença do nível. 
+
+2. (Questão 31 - 5) Prove que se $W_t = (1 - B)Z_t$, então $Z_t = W_t + W_{t-1} + ...$
+
+Podemos representar $\frac{1}{1 - B}$ como: 
+
+$$
+\frac{1}{1 - B} = \sum_{j=0}^{\infty}B^j,
+$$
+portanto $Z_t = \sum_{j=0}^{\infty}B^jW_t = W_t + W_{t-1} + W_{t-2} + ...$.
+
+3. (Questão 32 - 5) Prove que, na forma invertida do modelo, $\sum_{j=1}^{\infty} \pi_j = 1$.
+
+
+
+4. (Questão 36 - 5 - Sugestão) 
+
+5. (Questão 1 - 6) 
+
+----
 
 2. Simulação da distribuição da estatística de teste de Dickey-Fuller
 Acesse o livro 'Econometria de Séries Temporais' 2a. Edição do Rodrigo de Losso Bueno na "Minha Biblioteca"
