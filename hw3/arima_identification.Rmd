@@ -28,6 +28,10 @@ $$
 
 Sabemos que se $d > j - i \implies i > j - d$, o número de Stirling é $0$, isto é, $\Delta^d t^j$ é um polinômio de ordem $(j - d)^+$. Em particular, se $d > j$, teremos um polinômio de ordem $0$. 
 
+<!---
+Poderíamos fazer de uma maneira alternativa: provar, por indução em d que \Delta^d t^j é um polinômio de ordem (j - d)^+
+-->
+
 a. Tomando-se $d$ diferenças,  obtemos um modelo não estacionário, com uma tendência polinomial de grau $m-d = h$. 
 
 $$
