@@ -75,9 +75,43 @@ em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$.
 Acesse o livro 'Econometria de Séries Temporais' 2a. Edição do Rodrigo de Losso Bueno na "Minha Biblioteca"
 Leia Cap 4.5.1, 4.5.2 e 4.5.3, Pag 116 [(ou 134 online)](https://integrada.minhabiblioteca.com.br/#/books/9788522128259/pageid/134)
 
-2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, apõs eq (2) com $\phi_1 = 0.8$
+2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, apõs eq (2) com $\phi_1 = 0.8$. 
 
-2.2 Repita a simulação, mas agora adicione termos autoregressivos no modelo, verifique que a distribuição da estatística de teste permanece inalterada
+```{r}
+n <- 50
+Tr <- 100 
+S <- 10000
+e.sd <- 1
+phi <- 0.8
+t.stat <- c(1:S)
+set.seed(10000)
+
+for(i in 1:S){
+  # Passo 1
+  e <- rnorm(n + Tr, mean = 0, sd = e.sd) 
+  # Passo 2
+  y <- e 
+  for(j in 2:(n +Tr)){
+    y[j] <- phi*y[j-1] + y[j] 
+  }
+  # Passo 3
+  estimation <- arima(y[(n+1):(n+Tr)], 
+                      order = c(1,0,0), include.mean = F)
+  phi.hat <- estimation$coef
+  phi.sigma <- sqrt(estimation$sigma2)
+  # Passo 4
+  t.stat[i] = (phi.hat - 1)/phi.sigma
+}
+```
+
+Agora basta fazer o gráfico. 
+
+```{r}
+hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+      main = 'Densidade da t-estatística', )
+```
+
+2.2 Repita a simulação, mas agora adicione termos autoregressivos no modelo, verifique que a distribuição da estatística de teste permanece inalterada. 
 
 2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
 

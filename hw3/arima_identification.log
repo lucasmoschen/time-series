@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.4.29)  12 OCT 2020 12:31
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.4.29)  12 OCT 2020 14:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -299,6 +299,29 @@ Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
 \Gm@layouthoffset=\dimen155
 \Gm@layoutvoffset=\dimen156
 \Gm@dimlist=\toks24
+) (/usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2019/11/23 v1.2a Standard LaTeX Color (DPC)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package color Info: Driver file: pdftex.def on input line 147.
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/pdftex.def
+File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
+)) (/usr/share/texlive/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
+Package: fancyvrb 2020/01/13 v3.5 verbatim text (tvz,hv)
+\FV@CodeLineNo=\count270
+\FV@InFile=\read2
+\FV@TabBox=\box47
+\c@FancyVerbLine=\count271
+\FV@StepNumber=\count272
+\FV@OutFile=\write3
+) (/usr/share/texlive/texmf-dist/tex/latex/framed/framed.sty
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip54
+\fb@frw=\dimen157
+\fb@frh=\dimen158
+\FrameRule=\dimen159
+\FrameSep=\dimen160
 ) (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
 Package: graphicx 2019/11/30 v1.2a Enhanced LaTeX Graphics (DPC,SPQR)
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
@@ -309,11 +332,9 @@ Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: pdftex.def on input line 105.
-(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/pdftex.def
-File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
-))
-\Gin@req@height=\dimen157
-\Gin@req@width=\dimen158
+)
+\Gin@req@height=\dimen161
+\Gin@req@width=\dimen162
 ) (/usr/share/texlive/texmf-dist/tex/latex/grffile/grffile.sty
 Package: grffile 2019/11/11 v2.1 Extended file name support for graphics (legac
 y)
@@ -321,37 +342,37 @@ Package grffile Info: This package is an empty stub for compatibility on input
 line 40.
 ) (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
 File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
-\l__kernel_color_stack_int=\count270
-\l__pdf_internal_box=\box47
+\l__kernel_color_stack_int=\count273
+\l__pdf_internal_box=\box48
 ) (./arima_identification.aux)
 \openout1 = `arima_identification.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 71.
-LaTeX Font Info:    ... okay on input line 71.
-LaTeX Info: Redefining \microtypecontext on input line 71.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 111.
+LaTeX Font Info:    ... okay on input line 111.
+LaTeX Info: Redefining \microtypecontext on input line 111.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using protrusion set `basicmath'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `basictext'.
-LaTeX Info: Redefining \showhyphens on input line 71.
+LaTeX Info: Redefining \showhyphens on input line 111.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -359,8 +380,8 @@ Package microtype Info: No adjustment of character kerning.
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
-\AtBeginShipoutBox=\box48
-Package hyperref Info: Link coloring OFF on input line 71.
+\AtBeginShipoutBox=\box49
+Package hyperref Info: Link coloring OFF on input line 111.
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
 (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
@@ -368,14 +389,14 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 ) (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count271
+\c@section@level=\count274
 )
-LaTeX Info: Redefining \ref on input line 71.
-LaTeX Info: Redefining \pageref on input line 71.
-LaTeX Info: Redefining \nameref on input line 71.
+LaTeX Info: Redefining \ref on input line 111.
+LaTeX Info: Redefining \pageref on input line 111.
+LaTeX Info: Redefining \nameref on input line 111.
 (./arima_identification.out) (./arima_identification.out)
-\@outlinefile=\write3
-\openout3 = `arima_identification.out'.
+\@outlinefile=\write4
+\openout4 = `arima_identification.out'.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -413,16 +434,16 @@ LaTeX Info: Redefining \nameref on input line 71.
 
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count272
-\scratchdimen=\dimen159
-\scratchbox=\box49
-\nofMPsegments=\count273
-\nofMParguments=\count274
+\scratchcounter=\count275
+\scratchdimen=\dimen163
+\scratchbox=\box50
+\nofMPsegments=\count276
+\nofMParguments=\count277
 \everyMPshowfont=\toks25
-\MPscratchCnt=\count275
-\MPscratchDim=\dimen160
-\MPnumerator=\count276
-\makeMPintoPDFobject=\count277
+\MPscratchCnt=\count278
+\MPscratchDim=\dimen164
+\MPnumerator=\count279
+\makeMPintoPDFobject=\count280
 \everyMPtoPDFconversion=\toks26
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -432,109 +453,120 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 7
-3.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 1
+13.
 (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 7
-3.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 1
+13.
 (/usr/share/texmf/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-73.
+113.
 (/usr/share/texmf/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-73.
+113.
 (/usr/share/texmf/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 73.
+(Font)              <12> on input line 113.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 73.
+(Font)              <8> on input line 113.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 73.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 73.
-
+(Font)              <6> on input line 113.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 113
+.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 ) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 73.
-
+LaTeX Font Info:    Trying to load font information for U+msb on input line 113
+.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 81.
+(Font)              <10> on input line 121.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 81.
+(Font)              <7> on input line 121.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 81.
+(Font)              <5> on input line 121.
 
 Package amsmath Warning: Foreign command \atopwithdelims;
 (amsmath)                \frac or \genfrac should be used instead
-(amsmath)                 on input line 89.
+(amsmath)                 on input line 129.
 
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 9
-8.
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
+38.
 (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 2
-06.
+31.
 (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
+LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 237.
+[2]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-210.
+263.
 (/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-<arima_identification_files/figure-latex/unnamed-chunk-2-1.pdf, id=30, 436.6312
-6pt x 283.0575pt>
+<arima_identification_files/figure-latex/unnamed-chunk-2-1.pdf, id=42, 422.5787
+5pt x 284.06125pt>
 File: arima_identification_files/figure-latex/unnamed-chunk-2-1.pdf Graphic fil
 e (type pdf)
 <use arima_identification_files/figure-latex/unnamed-chunk-2-1.pdf>
 Package pdftex.def Info: arima_identification_files/figure-latex/unnamed-chunk-
-2-1.pdf  used on input line 217.
-(pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
-[2]
-<arima_identification_files/figure-latex/unnamed-chunk-3-1.pdf, id=43, 436.6312
+2-1.pdf  used on input line 268.
+(pdftex.def)             Requested size: 422.5906pt x 284.0692pt.
+<arima_identification_files/figure-latex/unnamed-chunk-4-1.pdf, id=43, 436.6312
 6pt x 283.0575pt>
-File: arima_identification_files/figure-latex/unnamed-chunk-3-1.pdf Graphic fil
+File: arima_identification_files/figure-latex/unnamed-chunk-4-1.pdf Graphic fil
 e (type pdf)
-<use arima_identification_files/figure-latex/unnamed-chunk-3-1.pdf>
+<use arima_identification_files/figure-latex/unnamed-chunk-4-1.pdf>
 Package pdftex.def Info: arima_identification_files/figure-latex/unnamed-chunk-
-3-1.pdf  used on input line 222.
+4-1.pdf  used on input line 297.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 227.
-[3 <./arima_identification_files/figure-latex/unnamed-chunk-2-1.pdf> <./arima_i
-dentification_files/figure-latex/unnamed-chunk-3-1.pdf>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 227.
+[3 <./arima_identification_files/figure-latex/unnamed-chunk-2-1.pdf>]
+<arima_identification_files/figure-latex/unnamed-chunk-5-1.pdf, id=58, 436.6312
+6pt x 283.0575pt>
+File: arima_identification_files/figure-latex/unnamed-chunk-5-1.pdf Graphic fil
+e (type pdf)
+<use arima_identification_files/figure-latex/unnamed-chunk-5-1.pdf>
+Package pdftex.def Info: arima_identification_files/figure-latex/unnamed-chunk-
+5-1.pdf  used on input line 302.
+(pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 307.
+[4 <./arima_identification_files/figure-latex/unnamed-chunk-4-1.pdf> <./arima_i
+dentification_files/figure-latex/unnamed-chunk-5-1.pdf>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 307.
 (./arima_identification.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 227.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 227.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 307.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 307.
 Package rerunfilecheck Info: File `arima_identification.out' has not changed.
 (rerunfilecheck)             Checksum: 177CF879C2A8C26970C53DB12C8286B0;100.
  ) 
 Here is how much of TeX's memory you used:
- 12303 strings out of 481239
- 181528 string characters out of 5920377
- 462570 words of memory out of 5000000
- 27305 multiletter control sequences out of 15000+600000
- 580676 words of font info for 83 fonts, out of 8000000 for 9000
+ 12826 strings out of 481239
+ 189684 string characters out of 5920377
+ 473497 words of memory out of 5000000
+ 27812 multiletter control sequences out of 15000+600000
+ 581313 words of font info for 85 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 34i,21n,42p,828b,333s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 34i,21n,42p,828b,364s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/share/texmf/fonts/enc/d
 vips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/shar
 e/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-ma
@@ -545,11 +577,13 @@ type1/public/lm/lmmi7.pfb></usr/share/texmf/fonts/type1/public/lm/lmr10.pfb></u
 sr/share/texmf/fonts/type1/public/lm/lmr12.pfb></usr/share/texmf/fonts/type1/pu
 blic/lm/lmr17.pfb></usr/share/texmf/fonts/type1/public/lm/lmr7.pfb></usr/share/
 texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/
-lmsy7.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on arima_identification.pdf (3 pages, 192383 bytes).
+lmsy7.pfb></usr/share/texmf/fonts/type1/public/lm/lmtk10.pfb></usr/share/texmf/
+fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtti1
+0.pfb>
+Output written on arima_identification.pdf (4 pages, 239375 bytes).
 PDF statistics:
- 114 PDF objects out of 1000 (max. 8388607)
- 91 compressed objects within 1 object stream
- 15 named destinations out of 1000 (max. 500000)
- 10259 words of extra memory for PDF output out of 12000 (max. 10000000)
+ 136 PDF objects out of 1000 (max. 8388607)
+ 106 compressed objects within 2 object streams
+ 16 named destinations out of 1000 (max. 500000)
+ 10264 words of extra memory for PDF output out of 12000 (max. 10000000)
 
