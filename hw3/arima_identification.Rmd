@@ -60,11 +60,14 @@ portanto $Z_t = \sum_{j=0}^{\infty}B^jW_t = W_t + W_{t-1} + W_{t-2} + ...$.
 
 3. (Questão 32 - 5) Prove que, na forma invertida do modelo, $\sum_{j=1}^{\infty} \pi_j = 1$.
 
-
-
 4. (Questão 36 - 5 - Sugestão) 
 
-5. (Questão 1 - 6) 
+5. (Questão 1 - 6) Prove que se $\rho_j = \phi^{|j|}, |\psi| < 1$, então
+
+$$
+Var(r_j) = \frac{1}{N}\left[\frac{(1 + \phi^2)(1 - \phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right], 
+$$
+em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$. 
 
 ----
 
@@ -79,4 +82,25 @@ Leia Cap 4.5.1, 4.5.2 e 4.5.3, Pag 116 [(ou 134 online)](https://integrada.minha
 2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
 
 3. Identificação do modelo: Identifique o modelo ARIMA para a série de dados de inflação 
+
+```{r, echo = F, warning=F}
+library(tseries)
+```
+
+Primeiro podemos verificar com que timos de série estamos lidando através de um plot do gráfico. Os dados são de caráter mensal e se inicia em agosto de 1994 até agosto de 2020. Não há dados faltantes nem duplicados. 
+
+```{r, echo = F}
+ipca <- read.csv('ipca.csv')
+ipca <- ts(ipca$ipca.acum, start = c(1994,8), end = c(2020,8), frequency = 12)
+plot(ipca, main = 'Ipca acumulado', xlab = 'Ano')
+```
+
+Está claro que  essa série tem uma tendência, pelo fato de estarmos tomando ipca acumulado. Vamos capturar o valor mensal, portanto: 
+
+```{r}
+ipca.month <- diff(ipca) 
+plot(ipca.month, main = 'Ipca mensal', xlab = 'Ano', ylab = 'Ipca')
+```
+
+Antes de identificar o modelo ARIMA, podemos ver pelp gráfico que existe uma variabilidade nos dados. 
 
