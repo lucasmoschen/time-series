@@ -97,7 +97,7 @@ plot(ipca, main = 'Ipca acumulado', xlab = 'Ano')
 
 Está claro que  essa série tem uma tendência, pelo fato de estarmos tomando ipca acumulado. Vamos capturar o valor mensal, portanto: 
 
-```{r}
+```{r, echo = F}
 ipca.month <- diff(ipca) 
 plot(ipca.month, main = 'Ipca mensal', xlab = 'Ano', ylab = 'Ipca')
 ```
