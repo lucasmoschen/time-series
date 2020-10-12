@@ -7,11 +7,14 @@ output: pdf_document
 
 # Instruções 
 
-1. (Questão 30 - 5) Considere o modelo abaixo. Prove que, se $m > d$: 
+1. (Questão 30 - 5) Considere o modelo abaixo.
 
 $$
 Z_t = \sum_{j=0}^m \beta_j t^j  + \frac{\theta(B)}{\phi(B)\Delta^d}a_t
 $$
+Prove que, se $m > d$:
+
+a. Tomando-se $d$ diferenças,  obtemos um modelo não estacionário, com uma tendência polinomial de grau $m-d = h$. 
 
 Temos que $\Delta^d Z_t = (1 - B)^d Z_t = \sum_{k=0}^d {d\choose k}(-1)^kB^k Z_t$, usando o binômio de Newton. Em particular: 
 $$
@@ -20,8 +23,9 @@ $$
 &= \sum_{k=0}^d {d\choose k}(-1)^k(t-k)^j \\
 &= \sum_{k=0}^d {d\choose k}(-1)^k\sum_{i=0}^j{j\choose i}t^ik^{j-i}(-1)^{j-i} \\
 &= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}\sum_{k=0}^d {d \choose k}(-1)^{d-k}(d-k)^{j-i}, \text{ redefinindo } k = d-k \\
-&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}\sum_{k=0}^d {d \choose k}(-1)^{d-k}(d-k)^{j-i} \\
-&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}d!(-1)^d\begin{Bmatrix}j-i \\ d\end{Bmatrix}, \text{ onde o úmtimo é o n° de Stirling de 2° tipo}
+&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}\sum_{k=0}^d {d \choose k}(-1)^{d+k}(d-k)^{j-i} \\
+&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}(-1)^d\sum_{k=0}^d {d \choose k}(-1)^k(d-k)^{j-i} \\
+&= \sum_{i=0}^j {j \choose i}t^i(-1)^{j-i}d!(-1)^d\begin{Bmatrix}j-i \\ d\end{Bmatrix}, \text{ onde o último é o número de Stirling de 2º tipo}
 \end{split}
 $$
 
@@ -31,8 +35,6 @@ Sabemos que se $d > j - i \implies i > j - d$, o número de Stirling é $0$, ist
 <!---
 Poderíamos fazer de uma maneira alternativa: provar, por indução em d que \Delta^d t^j é um polinômio de ordem (j - d)^+
 -->
-
-a. Tomando-se $d$ diferenças,  obtemos um modelo não estacionário, com uma tendência polinomial de grau $m-d = h$. 
 
 $$
 \Delta^d Z_t = \sum_{j=0}^m \beta_j \Delta^d t^j + \frac{\theta(B)}{\phi(B)}a_t
@@ -44,7 +46,7 @@ b. Tomando-se $m$ diferenças obteremos um processo estacionário não invertív
 Tomando $m$ diferenças, teremos um polinômio de ordem $0$. Seja, então, se olharmos a forma acima, o único valor diferente de $0$ será quando $i=0, j = d = m$. 
 
 $$
-\Delta^m Z_t = \beta_dd! + \frac{\theta(B)}{\phi(B)}a_t
+\Delta^m Z_t = \beta_m m! + \frac{\theta(B)}{\phi(B)}a_t
 $$
 
 Esse processo não é invertível porque não podemos escrever $a_t = \pi(B)Z_t$, dado à presença do nível. 
