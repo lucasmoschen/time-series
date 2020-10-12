@@ -135,8 +135,28 @@ Está claro que  essa série tem uma tendência, pelo fato de estarmos tomando i
 
 ```{r, echo = F}
 ipca.month <- diff(ipca) 
-plot(ipca.month, main = 'Ipca mensal', xlab = 'Ano', ylab = 'Ipca')
+plot(ipca.month, main = 'Ipca mensal', xlab = 'Ano', ylab = '%')
 ```
 
-Antes de identificar o modelo ARIMA, podemos ver pelp gráfico que existe uma variabilidade nos dados. 
+Antes de identificar o modelo ARIMA, podemos ver pelo gráfico que existe uma variabilidade nos dados. Por esse motivo, é bom visualizarmos uma transformação que reduza esse efeito. Em particular o logaritmo natural. 
+
+```{r, echo = F}
+logipca.month <- log(ipca.month + 10)
+plot(logipca.month, main = 'Log Ipca mensal', xlab = 'Ano', ylab = 'log %')
+```
+
+Checando o Teste Dickey-Fuller aumentado, temos que o p-valor é menor do que 0.01, o que faz com que rejeitemos a hipótese de que a série é não estacionária. Concluo que esse modelo já pode ser utilizado para identificar os parâmetros $p$ e $q$. 
+
+```{r, warning=F}
+adf.test(logipca.month, alternative = "stationary")
+```
+
+Antes disso, vejamos a ACF e a PACF 
+
+```{r, warning=F}
+par(mfrow = c(1,2))
+acf(logipca.month)
+pacf(logipca.month)
+```
+
 
