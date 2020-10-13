@@ -73,9 +73,10 @@ em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$.
 
 ----
 
-```{r, echo = F, warning=F}
+```{r, echo = F, warning=F, message=F}
 library(tseries)
 library(forecast)
+library(aTSA)
 ```
 
 2. Simulação da distribuição da estatística de teste de Dickey-Fuller
