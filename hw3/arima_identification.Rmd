@@ -90,13 +90,13 @@ df.simulation <- function(n,Tr, S, e.sd, phi, intercept = 0){
     e <- rnorm(n + Tr, mean = 0, sd = e.sd) 
     # Passo 2
     y <- e + intercept
-    for(j in (length(phi)+1):(n +Tr)){
+    for(j in (length(phi)+1):(n+Tr)){
       for(k in 1:length(phi)){
         y[j] <- phi[k]*y[(j-k)] + y[j]  
       }
     }
     # Passo 3 e 4 
-    test <- adf.test(y[(n+1):(n+Tr)], k = length(phi))
+    test <- adf.test(y[(n+1):(n+Tr)], k = (length(phi) - 1))
     t.stat[i] = test$statistic
   }
   return(t.stat)
