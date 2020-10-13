@@ -62,6 +62,24 @@ portanto $Z_t = \sum_{j=0}^{\infty}B^jW_t = W_t + W_{t-1} + W_{t-2} + ...$.
 
 3. (Questão 32 - 5) Prove que, na forma invertida do modelo, $\sum_{j=1}^{\infty} \pi_j = 1$.
 
+Na forma invertida do modelo, ele é escrito da seguinte forma:
+
+$$\pi(B) Z_t = a_t \\$$
+
+Vamos expandir o polinômio e tomar o valor esperado:
+
+$$\begin{split}
+  a_t &= \left[1 - \sum_{j=1}^\infty \pi_j B^j \right] Z_t \\
+  a_t &= Z_t - \pi_1Z_{t-1} - \pi_2 Z_{t-2} - \cdots \\
+  \mathbb{E}\{a_t\} &= \mathbb{E}\{Z_t - \pi_1 Z_{t-1} - \pi_2 Z_{t-2} - \cdots\} \\
+  0 &= \left(1 - \sum_{j=1}^\infty \pi_j\right) \mu \\
+  0 &= 1 - \sum_{j=1}^\infty \pi_j \\
+  \sum_{j=1}^\infty \pi_j &= 1\\
+\end{split}
+$$
+
+Suponhamos
+
 4. (Questão 36 - 5 - Sugestão) 
 
 5. (Questão 1 - 6) Prove que se $\rho_j = \phi^{|j|}, |\psi| < 1$, então
