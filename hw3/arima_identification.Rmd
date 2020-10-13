@@ -75,6 +75,7 @@ em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$.
 
 ```{r, echo = F, warning=F}
 library(tseries)
+library(forecast)
 ```
 
 2. Simulação da distribuição da estatística de teste de Dickey-Fuller
@@ -155,8 +156,6 @@ A distribuição também aparenta ser a mesma das anteriores!
 
 3. Identificação do modelo: Identifique o modelo ARIMA para a série de dados de inflação 
 
-
-
 Primeiro podemos verificar com que timos de série estamos lidando através de um plot do gráfico. Os dados são de caráter mensal e se inicia em agosto de 1994 até agosto de 2020. Não há dados faltantes nem duplicados. 
 
 ```{r, echo = F}
@@ -187,10 +186,42 @@ adf.test(logipca.month, alternative = "stationary")
 
 Antes disso, vejamos a ACF e a PACF 
 
-```{r, warning=F}
+```{r, warning=F, echo = F}
 par(mfrow = c(1,2))
-acf(logipca.month)
-pacf(logipca.month)
+acf(logipca.month, lag.max = 24)
+pacf(logipca.month, lag.max = 24)
 ```
+
+Olhando o gráfico fica difícil discernir. Mas é aparente que a PACF morre logo nos primeiros valores. Portanto, apenas olhando os gráficos, chegaríamos em um modelo AR(p). Em contrapartida, vamos ver como se comportam os critérios de informação. Vamos obter em um dataframe o AIC, BIC e AICC. Estamos tomando $K = L = log(N)$ como valor máximo. 
+
+```{r, echo = F}
+ARMA.res <- data.frame()
+## valor máximo de p,q.
+K <- trunc(log(length(ipca.month)))
+L <- K
+for (p in 0:K) {
+    for (q in 0:K) {
+        model <- Arima(y = logipca.month, order = c(p, 0, q))
+        ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
+    }
+}
+names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICC')
+```
+
+```{r, echo = F}
+library(knitr)
+kable(ARMA.res)
+```
+
+Os três critérios de informação tem o menor valor quando $p = 3, q = 2$.
+
+```{r, echo = F}
+plot(ARMA.res$AIC, type = 'l', col = 'green')
+lines(ARMA.res$BIC, col = 'red')
+lines(ARMA.res$AICC, col = 'blue')
+legend(x = 30, y = -520, legend = c('AIC', 'BIC','AICC'), fill = c('green', 'red', 'blue'))
+```
+
+Portanto, concluímos que o modelo identificando é $ARIMA(3,1,2)$, com uma transformação logaritmo.  
 
 
