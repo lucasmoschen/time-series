@@ -84,7 +84,7 @@ Acesse o livro 'Econometria de Séries Temporais' 2a. Edição do Rodrigo de Los
 Leia Cap 4.5.1, 4.5.2 e 4.5.3, Pag 116 [(ou 134 online)](https://integrada.minhabiblioteca.com.br/#/books/9788522128259/pageid/134)
 
 ```{r}
-df.simulation <- function(n,Tr, S, e.sd, phi, intercept = 0){
+df.simulation <- function(n, Tr, S, e.sd, phi, intercept = 0){
   t.stat <- c(1:S)
   for(i in 1:S){
     # Passo 1
@@ -127,7 +127,7 @@ Agora basta fazer o gráfico.
 
 ```{r}
 hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
-      main = 'Densidade da t-estatística', )
+      main = 'Densidade da t-estatística')
 ```
 
 2.2 Repita a simulação, mas agora adicione termos autoregressivos no modelo, verifique que a distribuição da estatística de teste permanece inalterada. 
@@ -155,14 +155,16 @@ t.stat <- df.simulation(n,Tr,S,e.sd,phi, intercept = 100)
 
 ```{r}
 hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
-      main = 'Densidade da t-estatística', )
+      main = 'Densidade da t-estatística')
 ```
 
 A distribuição também aparenta ser a mesma das anteriores!
 
+---
+
 3. Identificação do modelo: Identifique o modelo ARIMA para a série de dados de inflação 
 
-Primeiro podemos verificar com que timos de série estamos lidando através de um plot do gráfico. Os dados são de caráter mensal e se inicia em agosto de 1994 até agosto de 2020. Não há dados faltantes nem duplicados. 
+Primeiro podemos verificar com que tipo de série estamos lidando através de um plot do gráfico. Os dados são de caráter mensal e se inicia em agosto de 1994 até agosto de 2020. Não há dados faltantes nem duplicados. 
 
 ```{r, echo = F}
 ipca <- read.csv('ipca.csv')
@@ -170,32 +172,48 @@ ipca <- ts(ipca$ipca.acum, start = c(1994,8), end = c(2020,8), frequency = 12)
 plot(ipca, main = 'Ipca acumulado', xlab = 'Ano')
 ```
 
+Vejamos se é necessário uma transformação para estabilizar a variância. O que faremos é dividir a nossa série temporal em um conjunto de 8 observações consecutivas, e estimar a média e a amplitude de cada um.
+
+```{r}
+x = c()
+y = c()
+N = length(ipca)
+M = ceiling(N/8)
+for (i in 0:(M-1)) {
+  begin = ceiling(N/M)*i
+  end = min(c(ceiling(N/M)*(i+1)-1, N))
+  x = c(x, mean(ipca[begin:end]))
+  y = c(y, max(ipca[begin:end]) - min(ipca[begin:end]))
+}
+plot(x, y, main="Média vs. amplitude", xlab = "Média", ylab = "Amplitude")
+```
+
+É difícil de tirar grandes conclusões a partir desse gráfico, mas podemos supor que a média cresce linearmente com a amplitude. Sendo assim, sabemos que a transformação indicada é a logarítmica.
+
+```{r}
+ipca.log = log(ipca)
+plot(ipca.log, main = 'Transformação do Ipca pelo log', xlab = 'Ano', ylab = '%')
+```
+
 Está claro que  essa série tem uma tendência, pelo fato de estarmos tomando ipca acumulado. Vamos capturar o valor mensal, portanto: 
 
 ```{r, echo = F}
-ipca.month <- diff(ipca) 
+ipca.month <- diff(ipca.log) 
 plot(ipca.month, main = 'Ipca mensal', xlab = 'Ano', ylab = '%')
 ```
 
-Antes de identificar o modelo ARIMA, podemos ver pelo gráfico que existe uma variabilidade nos dados. Por esse motivo, é bom visualizarmos uma transformação que reduza esse efeito. Em particular o logaritmo natural. 
-
-```{r, echo = F}
-logipca.month <- log(ipca.month + 10)
-plot(logipca.month, main = 'Log Ipca mensal', xlab = 'Ano', ylab = 'log %')
-```
-
-Checando o Teste Dickey-Fuller aumentado, temos que o p-valor é menor do que 0.01, o que faz com que rejeitemos a hipótese de que a série é não estacionária. Concluo que esse modelo já pode ser utilizado para identificar os parâmetros $p$ e $q$. 
+Checando o Teste Dickey-Fuller aumentado, temos que o p-valor é menor do que 0.01, o que faz com que rejeitemos a hipótese de que a série é não estacionária. Concluímos que esse modelo já pode ser utilizado para identificar os parâmetros $p$ e $q$. 
 
 ```{r, warning=F}
-tseries::adf.test(logipca.month, alternative = "stationary")
+tseries::adf.test(ipca.month, alternative = "stationary")
 ```
 
 Antes disso, vejamos a ACF e a PACF 
 
 ```{r, warning=F, echo = F}
 par(mfrow = c(1,2))
-acf(logipca.month, lag.max = 24)
-pacf(logipca.month, lag.max = 24)
+acf(ipca.month, lag.max = 24)
+pacf(ipca.month, lag.max = 24)
 ```
 
 Olhando o gráfico fica difícil discernir. Mas é aparente que a PACF morre logo nos primeiros valores. Portanto, apenas olhando os gráficos, chegaríamos em um modelo AR(p). Em contrapartida, vamos ver como se comportam os critérios de informação. Vamos obter em um dataframe o AIC, BIC e AICC. Estamos tomando $K = L = log(N)$ como valor máximo. 
@@ -207,7 +225,7 @@ K <- trunc(log(length(ipca.month)))
 L <- K
 for (p in 0:K) {
     for (q in 0:K) {
-        model <- Arima(y = logipca.month, order = c(p, 0, q))
+        model <- Arima(y = ipca.month, order = c(p, 0, q))
         ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
     }
 }
