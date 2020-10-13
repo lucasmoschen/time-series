@@ -187,7 +187,7 @@ plot(logipca.month, main = 'Log Ipca mensal', xlab = 'Ano', ylab = 'log %')
 Checando o Teste Dickey-Fuller aumentado, temos que o p-valor é menor do que 0.01, o que faz com que rejeitemos a hipótese de que a série é não estacionária. Concluo que esse modelo já pode ser utilizado para identificar os parâmetros $p$ e $q$. 
 
 ```{r, warning=F}
-adf.test(logipca.month, alternative = "stationary")
+tseries::adf.test(logipca.month, alternative = "stationary")
 ```
 
 Antes disso, vejamos a ACF e a PACF 
