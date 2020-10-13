@@ -64,7 +64,7 @@ portanto $Z_t = \sum_{j=0}^{\infty}B^jW_t = W_t + W_{t-1} + W_{t-2} + ...$.
 
 Na forma invertida do modelo, ele é escrito da seguinte forma:
 
-$$\pi(B) Z_t = a_t \\$$
+$$\pi(B) Z_t = a_t$$
 
 Vamos expandir o polinômio e tomar o valor esperado:
 
@@ -78,7 +78,21 @@ $$\begin{split}
 \end{split}
 $$
 
-Suponhamos
+Observe que assumimos que $\mu \ne 0$. Isso na verdade é sem perda de generalidade, afinal:
+
+$$
+  \begin{split}
+    \pi(B) Z_t &= a_t \\
+    \theta(B) \pi(B) Z_t &= \theta(B) a_t \\
+    \varphi(B) Z_t &= \theta(B) a_t \\
+    \phi(B) \Delta^dZ_t &= \theta(B) a_t \\
+    \phi(B) \Delta^d(Z_t + \alpha) &= \theta(B) a_t \\
+    \phi(B) \Delta^dY_t &= \theta(B) a_t \\
+    &\vdots \\
+    \pi(B)Y_t &= a_t \\
+    \pi(B)(Z_t + \alpha) &= a_t \\
+  \end{split}
+$$
 
 4. (Questão 36 - 5 - Sugestão) 
 
