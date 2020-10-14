@@ -129,36 +129,50 @@ df.simulation <- function(n, Tr, S, e.sd, phi, intercept = 0){
         y[j] <- phi[k]*y[(j-k)] + y[j]  
       }
     }
-    # Passo 3 e 4 
-    test <- aTSA::adf.test(y[(n+1):(n+Tr)], nlag = 2, output = F)
-    if(intercept == 0){
-      t.stat[i] = test$type1[2, 'ADF']
-    }
-    else{
-      t.stat[i] = test$type2[2, 'ADF']
-    }
+    # Passo 3 e 4
+    x <- y[(n+1):(n+Tr)]
+    mom2 <- sum(x[1:(Tr-1)]*x[1:(Tr-1)])
+    rho.hat <- sum(x[1:(Tr-1)]*x[2:Tr])/mom2
+    Sn <- sum((x[2:Tr] - rho.hat*x[1:(Tr-1)])^2)/(Tr-1)
+    
+    t.stat[i] = (rho.hat - 1)*sqrt(mom2)/Sn
+    
+    #test <- aTSA::adf.test(y[(n+1):(n+Tr)], nlag = 2, output = F)
+    #if(intercept == 0){
+    #  t.stat[i] = test$type1[2, 'ADF']
+    #}
+    #else{
+    #  t.stat[i] = test$type2[2, 'ADF']
+    #}
   }
   return(t.stat)
 }
 ```
 
-2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, após eq (2) com $\phi_1 = 0.8$. 
+Primeiro, para fins de comparação, vejamos a distribuição quando $\phi = 1$. 
 
 ```{r, warning=F} 
 set.seed(10000)
 
 n <- 50
 Tr <- 100 
-S <- 1000
+S <- 10000
 e.sd <- 1
+phi <- c(1)
+
+t.stat <- df.simulation(n,Tr,S,e.sd,phi)
+hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+      main = 'Densidade da t-estatística')
+```
+
+Vemos que o gráfico é similar com o exemplo do livro, o que é um *sanity check* interessante. 
+
+2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, após eq (2) com $\phi_1 = 0.8$. 
+
+```{r, warning=F} 
 phi <- c(0.8)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi)
-```
-
-Agora basta fazer o gráfico. 
-
-```{r}
 hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
       main = 'Densidade da t-estatística')
 ```
@@ -169,14 +183,16 @@ hist(t.stat, breaks = 50 , freq = F, col = 'grey',
 phi <- c(0.8,-0.4, 0.2)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi)
+hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+      main = 'Densidade da t-estatística', )
 ```
-
 ```{r}
 hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
       main = 'Densidade da t-estatística', )
 ```
 
-De fato as distribuições são bem similares!
+
+De fato as distribuições são bem similares, como podemos observar pelos gráficos. 
 
 2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
 
@@ -184,9 +200,7 @@ De fato as distribuições são bem similares!
 phi <- c(0.8,-0.4, 0.2)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi, intercept = 100)
-```
 
-```{r}
 hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
       main = 'Densidade da t-estatística')
 ```
