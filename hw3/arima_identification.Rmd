@@ -284,7 +284,9 @@ library(knitr)
 kable(ARMA.res)
 ```
 
-Os critérios AIC e AICc tem informação mínima quandp $p = 3, q = 5$, o modelo com ordem alta (como já era esperado). Enquanto isso, o BIC subestima a ordem do modelo com $p = 1, q = 0$, o que corrobora os gráficos ACF e PACF. 
+Os critérios AIC e AICc tem informação mínima quandp $p = 3, q = 5$, o modelo com ordem alta (como já era esperado). Enquanto isso, o BIC subestima a ordem do modelo com $p = 1, q = 0$, o que corrobora os gráficos ACF e PACF.
+
+O seguinte gráfico apenas ajuda a identificar quais os índices do dataframe que contêm os parâmetros que minimizam as informações.
 
 ```{r, echo = F}
 plot(ARMA.res$AIC, type = 'l', col = 'green', 
@@ -294,6 +296,16 @@ lines(ARMA.res$AICC, col = 'blue')
 legend(x = 30, y = -2450, legend = c('AIC', 'BIC','AICc'), fill = c('green', 'red', 'blue'))
 ```
 
-Portanto, concluímos que o modelo identificando é $ARIMA(3,1,2)$, com uma transformação logaritmo.  
+Agora nós vamos ajustar os dois modelos encontrados aos dados e analisar os resíduos.
 
+```{r}
+model = arima(ipca.month, order = c(3, 1, 5))
+checkresiduals(model)
+```
 
+```{r}
+model = arima(ipca.month, order = c(1, 1, 0))
+checkresiduals(model)
+```
+
+Os resultados do teste de Ljung-Box indicam que ambos os modelos não possuem resíduos não correlacionados. Porém, o p-valor do modelo ARIMA(1, 1, 0) é menor, o que indica um melhor ajuste do modelo ARIMA(3, 1, 5).
