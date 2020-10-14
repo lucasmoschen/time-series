@@ -140,20 +140,19 @@ df.simulation <- function(n, Tr, S, e.sd, phi, intercept = 0){
       }
     }
     # Passo 3 e 4
-    # x <- y[(n+1):(n+Tr)]
-    # mom2 <- sum(x[1:(Tr-1)]*x[1:(Tr-1)])
-    # rho.hat <- sum(x[1:(Tr-1)]*x[2:Tr])/mom2
-    # Sn <- sum((x[2:Tr] - rho.hat*x[1:(Tr-1)])^2)/(Tr-1)
-    #
-    # t.stat[i] = (rho.hat - 1)*sqrt(mom2)/Sn
-
-    test <- tseries::adf.test(y[(n+1):(n+Tr)], alternative = "stationary")
-    if(intercept == 0){
-     t.stat[i] = test$statistic
+    x <- y[(n+1):(n+Tr)]
+    mom2 <- sum(x[1:(Tr-1)]*x[1:(Tr-1)])
+    # Us
+    model <- ar.ols(x, aic = F, order.max = length(phi), 
+                    intercept = !(intercept==0), demean = F)
+    rho.hat <- sum(model$ar)
+    error <- x[(length(phi)+1):Tr]
+    for(k in length(phi)){
+      error <- error - model$ar[[k]]*x[(length(phi) - k + 1):(Tr - k)]
     }
-    else{
-     t.stat[i] = test$type2[2, 'ADF']
-    }
+    Sn <- sum(error^2)/(Tr-(length(phi)+1))
+    
+    t.stat[i] = (rho.hat - 1)*sqrt(mom2)/Sn
   }
   return(t.stat)
 }
@@ -165,8 +164,8 @@ Primeiro, para fins de comparação, vejamos a distribuição quando $\phi = 1$.
 set.seed(10000)
 
 n <- 50
-Tr <- 100
-S <- 1000
+Tr <- 100 
+S <- 20000
 e.sd <- 1
 phi <- c(1)
 
@@ -197,20 +196,24 @@ hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística', )
 ```
 
+<<<<<<< HEAD
 De fato as distribuições são bem similares, como podemos observar pelos gráficos.
+=======
+De fato as distribuições são bem similares, como podemos observar pelos gráficos. Isso é provado no Apêndice B do livro de referência. 
+>>>>>>> b13d351305969c30330fc45cfc5c6b3b34a3dc80
 
 2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
 
 ```{r, warning = F}
-phi <- c(0.8,-0.4, 0.2)
+phi <- c(0.8, -0.4, 0.2)
 
-t.stat <- df.simulation(n,Tr,S,e.sd,phi, intercept = 100)
+t.stat <- df.simulation(n,Tr,S,e.sd,phi, intercept = 10)
 
 hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística')
 ```
 
-A distribuição também aparenta ser a mesma das anteriores!
+A distribuição tem uma forma muito similar aquela dos itens anteriores, porém ela tem um intervalo de definição menor do que a dos anteriores. 
 
 ---
 
