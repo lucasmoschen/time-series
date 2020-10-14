@@ -100,7 +100,7 @@ $$
 5. (Questão 1 - 6) Prove que se $\rho_j = \phi^{|j|}, |\phi| < 1$, então
 
 $$
-Var(r_j) = \frac{1}{N}\left[\frac{(1 + \phi^2)(1 - \phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right], 
+Var(r_j) = \frac{1}{N}\left[\frac{(1 + \phi^2)(1 - \phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right],
 $$
 em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$. 
 
@@ -110,7 +110,9 @@ $$Z_t = \phi Z_{t-1} + a_t$$
 
 Ora, @fuller2009introduction mostrou que, nesse caso,
 
-$$\textrm{Var}(r_j) = \dfrac{N-j}{N^2}\left[\dfrac{(1+\phi^2)(1-\phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right]$$
+$$
+\textrm{Var}(r_j) = \dfrac{N-j}{N^2}\left[\dfrac{(1+\phi^2)(1-\phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right]
+$$
 
 Acreditamos que a demonstração está fora do escopo deste exercício, pois envolve vários teoremas e bastante manipulações algébricas. Em particular:
 
@@ -244,7 +246,7 @@ plot(ipca, main = 'Ipca acumulado', xlab = 'Ano')
 
 Vejamos se é necessário uma transformação para estabilizar a variância. O que faremos é dividir a nossa série temporal em um conjunto de 8 observações consecutivas, e estimar a média e a amplitude de cada um.
 
-```{r}
+```{r, echo = F}
 x = c()
 y = c()
 N = length(ipca)
@@ -260,7 +262,7 @@ plot(x, y, main="Média vs. amplitude", xlab = "Média", ylab = "Amplitude")
 
 É difícil de tirar grandes conclusões a partir desse gráfico, mas podemos supor que a média cresce linearmente com a amplitude. Sendo assim, sabemos que a transformação indicada é a logarítmica.
 
-```{r}
+```{r, echo = F}
 ipca.log = log(ipca)
 plot(ipca.log, main = 'Transformação do Ipca pelo log', xlab = 'Ano', ylab = 'log')
 ```
