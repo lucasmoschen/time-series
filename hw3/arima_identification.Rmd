@@ -6,7 +6,7 @@ output:
   pdf_document:
     template: null
 bibliography: references.bib
-# link-citations: yes
+link-citations: yes
 ---
 
 1. (Questão 30 - 5) Considere o modelo abaixo.
@@ -321,16 +321,23 @@ legend(x = 30, y = -2450, legend = c('AIC', 'BIC','AICc'), fill = c('green', 're
 
 Agora nós vamos ajustar os dois modelos encontrados aos dados e analisar os resíduos.
 
-```{r}
-model = arima(ipca.month, order = c(3, 1, 5))
-checkresiduals(model)
+```{r, warning=F}
+model1 = arima(ipca.month, order = c(3, 1, 5))
+checkresiduals(model1)
 ```
 
-```{r}
-model = arima(ipca.month, order = c(1, 1, 0))
-checkresiduals(model)
+```{r, warning=F}
+model2 = arima(ipca.month, order = c(1, 1, 0))
+checkresiduals(model2)
 ```
 
-Os resultados do teste de Ljung-Box indicam que ambos os modelos não possuem resíduos não correlacionados. Porém, o p-valor do modelo ARIMA(1, 1, 0) é menor, o que indica um melhor ajuste do modelo ARIMA(3, 1, 5).
+A partir dos gráficos, podemos concluir que os resíduos não são normais. Os resultados do teste de Ljung-Box indicam que ambos os modelos não possuem resíduos não correlacionados. Porém, o p-valor do modelo ARIMA(1, 1, 0) é menor, o que indica um melhor ajuste do modelo ARIMA(3, 1, 5). Vamos calcular o MAPE de cada um dos modelos ajustados:
+
+```{r}
+print(c("MSE do ARIMA(3, 1, 5): ", mean(model1$residuals^2)))
+print(c("MSE do ARIMA(1, 1, 0): ", mean(model2$residuals^2)))
+```
+
+Observamos que o MSE do ARIMA(3, 1, 5) é melhor. Portanto, escolhemos este modelo para nossos dados.
 
 # Referências
