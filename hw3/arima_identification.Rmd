@@ -68,7 +68,8 @@ $$\pi(B) Z_t = a_t$$
 
 Vamos expandir o polinômio e tomar o valor esperado:
 
-$$\begin{split}
+$$
+\begin{split}
   a_t &= \left[1 - \sum_{j=1}^\infty \pi_j B^j \right] Z_t \\
   a_t &= Z_t - \pi_1Z_{t-1} - \pi_2 Z_{t-2} - \cdots \\
   \mathbb{E}\{a_t\} &= \mathbb{E}\{Z_t - \pi_1 Z_{t-1} - \pi_2 Z_{t-2} - \cdots\} \\
@@ -148,7 +149,7 @@ set.seed(10000)
 
 n <- 50
 Tr <- 100 
-S <- 10000
+S <- 1000
 e.sd <- 1
 phi <- c(0.8)
 
