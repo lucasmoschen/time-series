@@ -104,7 +104,7 @@ Var(r_j) = \frac{1}{N}\left[\frac{(1 + \phi^2)(1 - \phi^{2j})}{1-\phi^2} - 2j\ph
 $$
 em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$. 
 
-Observe que, se vale que $\rho_j = \phi^{|j|}$, então essas correlações são do modelo AR(1):
+Observe que, se vale que $\rho_j = \phi^{|j|}$, então essas correlações são do modelo AR(1), como visto em aula:
 
 $$Z_t = \phi Z_{t-1} + a_t$$
 
@@ -114,7 +114,17 @@ $$
 \textrm{Var}(r_j) = \dfrac{N-j}{N^2}\left[\dfrac{(1+\phi^2)(1-\phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right]
 $$
 
-Acreditamos que a demonstração está fora do escopo deste exercício, pois envolve vários teoremas e bastante manipulações algébricas.
+Acreditamos que a demonstração está fora do escopo deste exercício, pois envolve vários teoremas e bastante manipulações algébricas. Em particular:
+
+$$
+  \begin{split}
+    \textrm{Var}(r_1) &= \dfrac{N-1}{N^2}\left[\dfrac{(1+\phi^2)(1-\phi^{2})}{1-\phi^2} - 2\phi^{2}\right] \\
+    &= \dfrac{N-1}{N^2}\left[\dfrac{1 - \phi^4}{1-\phi^2} - 2\phi^{2}\right] \\
+    &= \dfrac{N-1}{N^2}\left[\dfrac{1 - \phi^4 - 2\phi^2+2\phi^4}{1-\phi^2}\right] \\
+    &= \dfrac{N-1}{N^2}\left[\dfrac{(1-\phi^2)^2}{1-\phi^2}\right] \\
+    &= \dfrac{N-1}{N^2}(1-\phi^2) \\
+  \end{split}
+$$
 
 ----
 
