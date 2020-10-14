@@ -2,10 +2,12 @@
 title: "Identificação de Modelos ARIMA"
 author: "Lucas Resck e Lucas Moschen"
 date: \today
-output: pdf_document
+output:
+  pdf_document:
+    template: null
+bibliography: references.bib
+# link-citations: yes
 ---
-
-# Instruções 
 
 1. (Questão 30 - 5) Considere o modelo abaixo.
 
@@ -95,14 +97,22 @@ $$
   \end{split}
 $$
 
-4. (Questão 36 - 5 - Sugestão) 
-
 5. (Questão 1 - 6) Prove que se $\rho_j = \phi^{|j|}, |\phi| < 1$, então
 
 $$
 Var(r_j) = \frac{1}{N}\left[\frac{(1 + \phi^2)(1 - \phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right], 
 $$
 em particular $Var(r_1) = \frac{1}{N}(1 - \phi^2)$. 
+
+Observe que, se vale que $\rho_j = \phi^{|j|}$, então essas correlações são do modelo AR(1):
+
+$$Z_t = \phi Z_{t-1} + a_t$$
+
+Ora, @fuller2009introduction mostrou que, nesse caso,
+
+$$\textrm{Var}(r_j) = \dfrac{N-j}{N^2}\left[\dfrac{(1+\phi^2)(1-\phi^{2j})}{1-\phi^2} - 2j\phi^{2j}\right]$$
+
+Acreditamos que a demonstração está fora do escopo deste exercício, pois envolve vários teoremas e bastante manipulações algébricas.
 
 ----
 
@@ -121,78 +131,73 @@ df.simulation <- function(n, Tr, S, e.sd, phi, intercept = 0){
   t.stat <- c(1:S)
   for(i in 1:S){
     # Passo 1
-    e <- rnorm(n + Tr, mean = 0, sd = e.sd) 
+    e <- rnorm(n + Tr, mean = 0, sd = e.sd)
     # Passo 2
     y <- e + intercept
     for(j in (length(phi)+1):(n+Tr)){
       for(k in 1:length(phi)){
-        y[j] <- phi[k]*y[(j-k)] + y[j]  
+        y[j] <- phi[k]*y[(j-k)] + y[j]
       }
     }
     # Passo 3 e 4
-    x <- y[(n+1):(n+Tr)]
-    mom2 <- sum(x[1:(Tr-1)]*x[1:(Tr-1)])
-    rho.hat <- sum(x[1:(Tr-1)]*x[2:Tr])/mom2
-    Sn <- sum((x[2:Tr] - rho.hat*x[1:(Tr-1)])^2)/(Tr-1)
-    
-    t.stat[i] = (rho.hat - 1)*sqrt(mom2)/Sn
-    
-    #test <- aTSA::adf.test(y[(n+1):(n+Tr)], nlag = 2, output = F)
-    #if(intercept == 0){
-    #  t.stat[i] = test$type1[2, 'ADF']
-    #}
-    #else{
-    #  t.stat[i] = test$type2[2, 'ADF']
-    #}
+    # x <- y[(n+1):(n+Tr)]
+    # mom2 <- sum(x[1:(Tr-1)]*x[1:(Tr-1)])
+    # rho.hat <- sum(x[1:(Tr-1)]*x[2:Tr])/mom2
+    # Sn <- sum((x[2:Tr] - rho.hat*x[1:(Tr-1)])^2)/(Tr-1)
+    #
+    # t.stat[i] = (rho.hat - 1)*sqrt(mom2)/Sn
+
+    test <- tseries::adf.test(y[(n+1):(n+Tr)], alternative = "stationary")
+    if(intercept == 0){
+     t.stat[i] = test$statistic
+    }
+    else{
+     t.stat[i] = test$type2[2, 'ADF']
+    }
   }
   return(t.stat)
 }
 ```
 
-Primeiro, para fins de comparação, vejamos a distribuição quando $\phi = 1$. 
+Primeiro, para fins de comparação, vejamos a distribuição quando $\phi = 1$.
 
-```{r, warning=F} 
+```{r, warning=F}
 set.seed(10000)
 
 n <- 50
-Tr <- 100 
-S <- 10000
+Tr <- 100
+S <- 1000
 e.sd <- 1
 phi <- c(1)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi)
-hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística')
 ```
 
-Vemos que o gráfico é similar com o exemplo do livro, o que é um *sanity check* interessante. 
+Vemos que o gráfico é similar com o exemplo do livro, o que é um *sanity check* interessante.
 
-2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, após eq (2) com $\phi_1 = 0.8$. 
+2.1 Simule os valores críticos da estatística de teste DF, como proposto no Cap 4.5.1, após eq (2) com $\phi_1 = 0.8$.
 
-```{r, warning=F} 
+```{r, warning=F}
 phi <- c(0.8)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi)
-hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística')
 ```
 
-2.2 Repita a simulação, mas agora adicione termos autoregressivos no modelo, verifique que a distribuição da estatística de teste permanece inalterada. 
+2.2 Repita a simulação, mas agora adicione termos autoregressivos no modelo, verifique que a distribuição da estatística de teste permanece inalterada.
 
 ```{r, warning = F}
 phi <- c(0.8,-0.4, 0.2)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi)
-hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
-      main = 'Densidade da t-estatística', )
-```
-```{r}
-hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística', )
 ```
 
-
-De fato as distribuições são bem similares, como podemos observar pelos gráficos. 
+De fato as distribuições são bem similares, como podemos observar pelos gráficos.
 
 2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
 
@@ -201,7 +206,7 @@ phi <- c(0.8,-0.4, 0.2)
 
 t.stat <- df.simulation(n,Tr,S,e.sd,phi, intercept = 100)
 
-hist(t.stat, breaks = 50 , freq = F, col = 'grey', 
+hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística')
 ```
 
@@ -209,9 +214,9 @@ A distribuição também aparenta ser a mesma das anteriores!
 
 ---
 
-3. Identificação do modelo: Identifique o modelo ARIMA para a série de dados de inflação 
+3. Identificação do modelo: Identifique o modelo ARIMA para a série de dados de inflação
 
-Primeiro podemos verificar com que tipo de série estamos lidando através de um plot do gráfico. Os dados são de caráter mensal e se inicia em agosto de 1994 até agosto de 2020. Não há dados faltantes nem duplicados. 
+Primeiro podemos verificar com que tipo de série estamos lidando através de um plot do gráfico. Os dados são de caráter mensal e se inicia em agosto de 1994 até agosto de 2020. Não há dados faltantes nem duplicados.
 
 ```{r, echo = F}
 ipca <- read.csv('ipca.csv')
@@ -242,20 +247,20 @@ ipca.log = log(ipca)
 plot(ipca.log, main = 'Transformação do Ipca pelo log', xlab = 'Ano', ylab = 'log')
 ```
 
-Está claro que essa série tem uma tendência, pelo fato de estarmos tomando ipca acumulado. Vamos capturar o valor mensal, portanto: 
+Está claro que essa série tem uma tendência, pelo fato de estarmos tomando ipca acumulado. Vamos capturar o valor mensal, portanto:
 
 ```{r, echo = F}
-ipca.month <- diff(ipca.log) 
+ipca.month <- diff(ipca.log)
 plot(ipca.month, main = 'Ipca mensal', xlab = 'Ano', ylab = 'log %')
 ```
 
-Checando o Teste Dickey-Fuller aumentado, temos que o p-valor é menor do que 0.01, o que faz com que rejeitemos a hipótese de que a série é não estacionária. Concluímos que esse modelo já pode ser utilizado para identificar os parâmetros $p$ e $q$. 
+Checando o Teste Dickey-Fuller aumentado, temos que o p-valor é menor do que 0.01, o que faz com que rejeitemos a hipótese de que a série é não estacionária. Concluímos que esse modelo já pode ser utilizado para identificar os parâmetros $p$ e $q$.
 
 ```{r, warning=F, mensage = F}
 tseries::adf.test(ipca.month, alternative = "stationary")
 ```
 
-Antes disso, vejamos a ACF e a PACF 
+Antes disso, vejamos a ACF e a PACF
 
 ```{r, warning=F, echo = F}
 par(mfrow = c(1,2))
@@ -263,7 +268,7 @@ acf(ipca.month, lag.max = 24)
 pacf(ipca.month, lag.max = 24)
 ```
 
-Olhando o gráfico fica difícil discernir. Mas é aparente que a PACF morre logo nos primeiros valores. Portanto, apenas olhando os gráficos, chegaríamos em um modelo AR(p). Em contrapartida, vamos ver como se comportam os critérios de informação. Vamos obter em um dataframe o AIC, BIC e AICC. Estamos tomando $K = L = log(N)$ como valor máximo. 
+Olhando o gráfico fica difícil discernir. Mas é aparente que a PACF morre logo nos primeiros valores. Portanto, apenas olhando os gráficos, chegaríamos em um modelo AR(p). Em contrapartida, vamos ver como se comportam os critérios de informação. Vamos obter em um dataframe o AIC, BIC e AICC. Estamos tomando $K = L = log(N)$ como valor máximo.
 
 ```{r, echo = F}
 ARMA.res <- data.frame()
@@ -289,7 +294,7 @@ Os critérios AIC e AICc tem informação mínima quandp $p = 3, q = 5$, o model
 O seguinte gráfico apenas ajuda a identificar quais os índices do dataframe que contêm os parâmetros que minimizam as informações.
 
 ```{r, echo = F}
-plot(ARMA.res$AIC, type = 'l', col = 'green', 
+plot(ARMA.res$AIC, type = 'l', col = 'green',
      xlab = 'Índice do Dataframe', ylab = 'Informação')
 lines(ARMA.res$BIC, col = 'red')
 lines(ARMA.res$AICC, col = 'blue')
@@ -309,3 +314,5 @@ checkresiduals(model)
 ```
 
 Os resultados do teste de Ljung-Box indicam que ambos os modelos não possuem resíduos não correlacionados. Porém, o p-valor do modelo ARIMA(1, 1, 0) é menor, o que indica um melhor ajuste do modelo ARIMA(3, 1, 5).
+
+# Referências
