@@ -156,7 +156,7 @@ df.simulation <- function(n, Tr, S, e.sd, phi, intercept = 0){
     model <- ar.ols(x, aic = F, order.max = length(phi), 
                     intercept = !(intercept==0), demean = F)
     rho.hat <- sum(model$ar)
-    error <- x[(length(phi)+1):Tr]
+    error <- x[(length(phi)+1):Tr] - intercept
     for(k in length(phi)){
       error <- error - model$ar[[k]]*x[(length(phi) - k + 1):(Tr - k)]
     }
@@ -206,24 +206,29 @@ hist(t.stat, breaks = 50 , freq = F, col = 'grey',
       main = 'Densidade da t-estatística', )
 ```
 
-<<<<<<< HEAD
-De fato as distribuições são bem similares, como podemos observar pelos gráficos.
-=======
 De fato as distribuições são bem similares, como podemos observar pelos gráficos. Isso é provado no Apêndice B do livro de referência. 
->>>>>>> b13d351305969c30330fc45cfc5c6b3b34a3dc80
 
 2.3 Adicione intercepto e verifique se a nova distribuição da estatística de teste muda.
 
 ```{r, warning = F}
 phi <- c(0.8, -0.4, 0.2)
 
-t.stat <- df.simulation(n,Tr,S,e.sd,phi, intercept = 10)
-
-hist(t.stat, breaks = 50 , freq = F, col = 'grey',
-      main = 'Densidade da t-estatística')
+t.stat1 <- df.simulation(n,Tr,S,e.sd,phi, intercept = 1)
+t.stat2 <- df.simulation(n,Tr,S,e.sd,phi, intercept = 5)
+t.stat3 <- df.simulation(n,Tr,S,e.sd,phi, intercept = 10)
 ```
 
-A distribuição tem uma forma muito similar aquela dos itens anteriores, porém ela tem um intervalo de definição menor do que a dos anteriores. 
+```{r, echo = F}
+par(mfrow = c(3,1))
+hist(t.stat1, breaks = 50 , freq = F, col = 'grey', 
+      main = 'Densidade da t-estatística intercept = 1')
+hist(t.stat2, breaks = 50 , freq = F, col = 'grey', 
+      main = 'Densidade da t-estatística intercept = 5')
+hist(t.stat3, breaks = 50 , freq = F, col = 'grey', 
+      main = 'Densidade da t-estatística intercept = 10')
+```
+
+Vemos que a distribuição varia conforme o intercepto. Quando o intercepto é pequeno, a distribuição parece não mudar muito, porém quando ele aumenta, o histograma vai mudando um pouco de formato, concentrando-se mais e mais próximo de 0. 
 
 ---
 
