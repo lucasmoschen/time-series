@@ -1,0 +1,53 @@
+---
+title: "Modelagem ARIMA e Análise de resíduos"
+author: "Lucas Resck e Lucas Moschen"
+date: \today
+output:
+  pdf_document:
+    template: null
+bibliography: references.bib
+link-citations: yes
+---
+
+# Instruções
+
+Neste projeto vocês utilizarão o método de Box-Jenkins para modelagem de séries temporais ARIMA em três séries.
+
+Lembrem que o primeiro passo é determinar se alguma transformação deve ser feita para estabilizar a variância (Box-Cox), em seguida remover sazonalidade e raiz unitária.
+
+Para cada uma das séries, prever 3 passos a frente e plotar o intervalo de previsão.
+
+A entrega deve ser uma apresentação contendo os passos utilizados, modelos selecionados e uma discussão sobre as hipóteses do modelo para cada uma das séries. Além disso, o plot com a previsão e intervalo de confiança deve ser incluido na escala natural dos dados.
+
+```{r load_libraries, echo=F, message=F, warning=F }
+library(fpp2)
+```
+
+# Assassinato de mulheres
+
+Primeiro, vamos visualizar a série. 
+
+```{r, echo=F}
+autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes',
+               xlab = 'Tempo (anual)', ylab = 'Total')
+```
+
+# Uso de cartão de débito
+
+Primeiro, vamos visualizar a série. 
+
+```{r, echo = F}
+autoplot(debitcards, main = 'Uso de cartão de débito no varejo na Islândia',
+               xlab = 'Tempo (mensal)', ylab = 'million ISK')
+```
+
+# Comer fora na Austrália
+
+Primeiro, vamos visualizar a série. 
+
+```{r, echo=F}
+autoplot(auscafe, main = 'Gastos mensais em comer fora na Austrália',
+               xlab = 'Tempo (mensal)', ylab = 'Billion dolars')
+```
+
+# Referências
