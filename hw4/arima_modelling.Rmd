@@ -21,14 +21,39 @@ A entrega deve ser uma apresentação contendo os passos utilizados, modelos sel
 
 ```{r load_libraries, echo=F, message=F, warning=F }
 library(fpp2)
+library(forecast)
 ```
+
+# Metodologia Box-Jenkins 
+
+0. Tranformação dos dados para estabilizar a variância. 
+
+1. Identificação
+
+1.1 Checar a estacionaridade e diferencial $d$ vezes;
+
+1.2 Visualizar autocorrelação e autocorrelação parcial dos dados;
+
+1.3 Comparar informações AIC, BIC e AICc e selectionar $p$ e $q$.
+
+2. Estimação 
+
+2.1 Estimar os valores de $\phi$ e $\theta$ do modelo através de máxima verossimilhança.
+
+3. Diagnóstico 
+
+3.1 Visualizar os resíduos do fitting; 
+
+3.2 Plotar histograma, autocorrelação e autocorrelação parcial dos resíduos; 
+
+3.3 Testes de estacionaridade e de normalidade. 
 
 # Assassinato de mulheres
 
 Primeiro, vamos visualizar a série. 
 
 ```{r, echo=F}
-autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes',
+autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes (EUA)',
                xlab = 'Tempo (anual)', ylab = 'Total')
 ```
 
