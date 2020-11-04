@@ -135,6 +135,13 @@ jarque.bera.test(model$residuals)
 
 Não rejeitamos nenhuma das hipóteses. Estamos satisfeitos. 
 
+## Projeção 
+
+```{r}
+forecast(model, h = 3) %>% autoplot()
+```
+
+
 # Uso de cartão de débito
 
 Primeiro, vamos visualizar a série. 
