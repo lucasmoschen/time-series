@@ -22,9 +22,10 @@ A entrega deve ser uma apresentação contendo os passos utilizados, modelos sel
 ```{r load_libraries, echo=F, message=F, warning=F }
 library(fpp2)
 library(forecast)
+library(tseries)
 ```
 
-# Metodologia Box-Jenkins 
+# Método Box-Jenkins 
 
 0. Tranformação dos dados para estabilizar a variância. 
 
@@ -56,6 +57,83 @@ Primeiro, vamos visualizar a série.
 autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes (EUA)',
                xlab = 'Tempo (anual)', ylab = 'Total')
 ```
+
+## Transformação Box-Cox
+
+```{r, echo=F}
+lambda <- BoxCox.lambda(wmurders)
+bcwmurders <- BoxCox(wmurders, lambda)
+autoplot(bcwmurders, 
+         main = paste('Total de mulheres assassinadas por 100 mil habitantes (EUA)', lambda),
+         xlab = 'Tempo (anual)', ylab = 'Total')
+```
+
+## Identificação 
+
+### Teste de Estacionaridade ADF
+
+```{r}
+adf.test(bcwmurders)
+```
+
+Como $\text{p-valor} \ge 0.05$, inferimos a não estacioanridade.  
+
+### Diferenciando 
+
+```{r, echo=F}
+dwmurders <- diff(bcwmurders)
+autoplot(dwmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes (EUA)',
+         xlab = 'Tempo (anual)', ylab = 'Total mensal')
+```
+
+```{r}
+adf.test(dwmurders)
+```
+
+```{r, echo=F}
+par(mfrow = c(1,2))
+acf(dwmurders)
+pacf(dwmurders)
+```
+
+É inconclusivo, piriri, pororo. 
+
+```{r, echo = F}
+ARMA.res <- data.frame()
+## valor máximo de p,q.
+K <- trunc(log(length(dwmurders)))
+L <- K
+for (p in 0:K) {
+    for (q in 0:K) {
+        model <- Arima(y = dwmurders, order = c(p, 0, q))
+        ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
+    }
+}
+names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICC')
+```
+
+```{r, echo = F, message=F}
+library(knitr)
+kable(ARMA.res)
+```
+
+Baseado no AIC e AICc, o modelo é (0,2). O BIC também caracteriza (0,2) como um bom modelo. 
+
+## Estimação 
+
+```{r}
+model <- Arima(wmurders, order = c(0,1,2), lambda = "auto")
+summary(model)
+```
+
+## Diagnóstico 
+
+```{r}
+checkresiduals(model)
+jarque.bera.test(model$residuals)
+```
+
+Não rejeitamos nenhuma das hipóteses. Estamos satisfeitos. 
 
 # Uso de cartão de débito
 
