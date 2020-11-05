@@ -300,7 +300,7 @@ Baseado no AIC e AICc, o modelo é ARMA(2,3)(0,1) é o escolhido. Felizmente o B
 
 Estimamos os parâmetros do modelo, considerando uma diferenciação sazonal. 
 
-```{r}
+```{r, echo=F}
 model <- Arima(debitcards, order = c(2,1,3), seasonal = c(0,1,1), lambda = "auto")
 summary(model)
 ```
@@ -313,14 +313,14 @@ Aqui podemos conferir os resíduos. É importante detacar a aparência normal do
 
 O test Ljung-Box coorrobora esse fato, rejeitando a hipótese nula de que os coeficientes de correlação são iguais. Já Jarque Bera também rejeita a hipótese nula, o que nos dá evidência suficiente para rejeitar a  normalidade dos resíduos, dada a aparente assimetria. 
 
-```{r}
+```{r, echo=F}
 checkresiduals(model)
 jarque.bera.test(model$residuals)
 ```
 
 Apenas olhandos os resíduos, fica muito difícil de propor alguma mudança. Todavia uma proposição interessante seria retirar a média móvel sazonal.
 
-```{r}
+```{r, echo=F}
 model <- Arima(debitcards, order = c(2,1,3), seasonal = c(0,1,0), lambda = "auto")
 checkresiduals(model)
 jarque.bera.test(model$residuals)
@@ -332,7 +332,7 @@ Apesar de termos piorado o lag 12, que ainda continua com o pico, resolvemos o p
 
 Agora vamos conferir as projeções três passos a frente.
 
-```{r}
+```{r, echo=F}
 forecast(model, h = 3) %>% autoplot()
 ```
 
