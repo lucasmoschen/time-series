@@ -9,16 +9,6 @@ bibliography: references.bib
 link-citations: yes
 ---
 
-# Instruções
-
-Neste projeto vocês utilizarão o método de Box-Jenkins para modelagem de séries temporais ARIMA em três séries.
-
-Lembrem que o primeiro passo é determinar se alguma transformação deve ser feita para estabilizar a variância (Box-Cox), em seguida remover sazonalidade e raiz unitária.
-
-Para cada uma das séries, prever 3 passos a frente e plotar o intervalo de previsão.
-
-A entrega deve ser uma apresentação contendo os passos utilizados, modelos selecionados e uma discussão sobre as hipóteses do modelo para cada uma das séries. Além disso, o plot com a previsão e intervalo de confiança deve ser incluido na escala natural dos dados.
-
 ```{r load_libraries, echo=F, message=F, warning=F }
 library(fpp2)
 library(forecast)
@@ -51,7 +41,7 @@ library(tseries)
 
 # Assassinato de mulheres
 
-Primeiro, vamos visualizar a série. 
+Primeiro, vamos visualizar a série anual. Peecebemos uma clara tendência, com crescimento acentuado ao longo das décadas de 1960 e 1970, bem como um decréscimo após os anos de 1990. 
 
 ```{r, echo=F}
 autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes (EUA)',
@@ -59,6 +49,16 @@ autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes
 ```
 
 ## Transformação Box-Cox
+
+Dada a nossa série, é importante que visualizemos a variância ao longo dela. Visualmente ela aparenta não ter variância constante, dado que no início da série, ela aparenta ser menor. Para isso vamos calcular a transformação ótima de Box-Cox. 
+
+A transformação de Box-Cox é a seguinte, se $\{y_t\}$ for uma série temporal, 
+
+$$
+y_t^{(\lambda)} = \begin{cases} \frac{y_t^{\lambda} - 1}{\lambda}, \text{ se } \lambda \neq 0\\ \log(y_t),  \text{ se } \lambda = 0\end{cases}
+$$
+
+A escolha de $\lambda$ ótimo utiliza o método de Guerrero, que escolhe $\lambda$ que minimize o coeficiente de variação ($c_v = \frac{\sigma}{\mu}$) para subséries de $y_t$. A seguir podemos conferir o resultado da transformação. 
 
 ```{r, echo=F}
 lambda <- BoxCox.lambda(wmurders)
