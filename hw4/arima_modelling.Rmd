@@ -64,8 +64,9 @@ autoplot(wmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes
 lambda <- BoxCox.lambda(wmurders)
 bcwmurders <- BoxCox(wmurders, lambda)
 autoplot(bcwmurders, 
-         main = paste('Total de mulheres assassinadas por 100 mil habitantes (EUA)', lambda),
-         xlab = 'Tempo (anual)', ylab = 'Total')
+         main = 'Total de mulheres assassinadas por 100 mil habitantes (EUA)',
+         xlab = 'Tempo (anual)', ylab = 'Total') + 
+annotate("text", x=1955, y=1.3, label= paste('lambda = ', round(lambda, digits = 3)))
 ```
 
 ## Identificação 
@@ -83,7 +84,7 @@ Como $\text{p-valor} \ge 0.05$, inferimos a não estacioanridade.
 ```{r, echo=F}
 dwmurders <- diff(bcwmurders)
 autoplot(dwmurders, main = 'Total de mulheres assassinadas por 100 mil habitantes (EUA)',
-         xlab = 'Tempo (anual)', ylab = 'Total mensal')
+         xlab = 'Tempo (anual)', ylab = 'Total anual')
 ```
 
 ```{r}
@@ -144,11 +145,132 @@ forecast(model, h = 3) %>% autoplot()
 
 # Uso de cartão de débito
 
-Primeiro, vamos visualizar a série. 
+Primeiro, vamos visualizar a série. Percebemos uma sutil sazonalidade, aparentemente anual, além de uma clara tendência. 
 
 ```{r, echo = F}
 autoplot(debitcards, main = 'Uso de cartão de débito no varejo na Islândia',
                xlab = 'Tempo (mensal)', ylab = 'million ISK')
+```
+
+## Transformação Box-Cox
+
+Pelo gráfico, parece que teremos que fazer alguma transformação de estabilidade da variância. Para isso, vamos utilizar a transformação Box-Cox.
+
+```{r, echo=F}
+lambda <- BoxCox.lambda(debitcards)
+bcdebitcards <- BoxCox(debitcards, lambda)
+autoplot(bcdebitcards, main = 'Uso de cartão de débito no varejo na Islândia',
+               xlab = 'Tempo (mensal)', ylab = 'million ISK') + 
+annotate("text", x=2002, y=3.6, label= paste('lambda = ', round(lambda, digits = 3)))
+```
+
+## Identificação 
+
+Agora, com a variância da série estabilizada, podemos fazer o teste de estacionaridade. Observe que o teste ADF possui possibilidade de tendência. Assim
+
+### Teste de Estacionaridade ADF
+
+```{r}
+adf.test(bcdebitcards)
+```
+
+Como $\text{p-valor} \ge 0.05$, não podemos rejeitar a hipótese nula de que a série é não estacionária. Portanto, vamos usar a primeira diferenciação.  
+
+### Diferenciando 
+
+```{r, echo=F}
+ddebitcards <- diff(bcdebitcards)
+autoplot(ddebitcards, main = 'Uso de cartão de débito no varejo na Islândia',
+               xlab = 'Tempo (mensal)', ylab = 'million ISK mensal')
+```
+
+```{r}
+adf.test(ddebitcards)
+```
+
+Assim, podemos rejeitar a hipótese nula, o que suporta a ideia de que a série é estacionária. Vamos considerar
+
+### ACF e PACF
+
+```{r, echo=F}
+par(mfrow = c(1,2))
+acf(ddebitcards)
+pacf(ddebitcards)
+```
+
+Percebemos dois fatores bem destacados: uma grande correlação quando o $\text{Lag} = 12$, o que indica que existe uma sazonalidade anual; e que a PACF decresce exponencialmente, enquanto a ACF morre após $\text{Lag} = 1$, o que nos levaria a um modelo MA(1). Antes disso, vamos fazer uma diferenciação a cada 12 meses. 
+
+```{r, echo=F}
+ddebitcards <- diff(ddebitcards, 12)
+autoplot(ddebitcards, main = 'Uso de cartão de débito no varejo na Islândia',
+               xlab = 'Tempo (mensal)', ylab = 'million ISK mensal')
+```
+
+```{r, echo=F}
+adf.test(ddebitcards)
+```
+
+Observe que ainda temos uma série estacionária. Vejamos a ACF e PACF novamente: 
+
+```{r, echo=F}
+par(mfrow = c(1,2))
+acf(ddebitcards)
+pacf(ddebitcards)
+```
+
+O pico diminuiu consideravelmente. Agora, sim, vamos considerar os critérios de informação para identificar o modelo.
+
+### Critérios de Informação
+
+```{r, echo = F}
+ARMA.res <- data.frame()
+## valor máximo de p,q.
+K <- trunc(log(length(ddebitcards)))
+L <- K
+for (p in 0:K) {
+    for (q in 0:K) {
+        model <- Arima(y = ddebitcards, order = c(p, 0, q))
+        ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
+    }
+}
+names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICC')
+```
+
+```{r, echo = F, message=F}
+library(knitr)
+kable(ARMA.res)
+```
+
+Baseado no AIC e AICc, o modelo é ARMA(2,5). Baseado no BIC escolhemos um modelo bem mis simples, ARMA(2,0). Vou seguir com o modelo com mais parâmetros. 
+
+## Estimação 
+
+Estimamos os parâmetros do modelo, considerando uma diferenciação sazonal. 
+
+```{r}
+model <- Arima(debitcards, order = c(2,1,5), seasonal = c(0,1,0), lambda = "auto")
+summary(model)
+```
+
+## Diagnóstico 
+
+Aqui podemos conferir os resíduos. É importante detacar a aparência normal dos resíduos, o que é interessante. Porém a ACF ainda apresenta picos, o mais incomodativo é do período 12. 
+
+O test Ljung-Box coorrobora esse fato, rejeitando a hipótese nula de que os coeficientes de correlação são iguais. Já Jarque Bera não rejeita a normalidade, como esperávamos. 
+
+```{r}
+checkresiduals(model)
+jarque.bera.test(model$residuals)
+```
+
+O persistente pico pode ser um indicativo de que a série sazonal precise de coeficientes ARMA. Em particular, poderíamos colocar ARMA sazonal. Isso fica para as próximas análises. 
+
+## Projeção 
+
+Agora vamos conferir as projeções três passos a frente.
+
+```{r}
+forecast(model, h = 3) %>% autoplot()
 ```
 
 # Comer fora na Austrália
@@ -159,5 +281,3 @@ Primeiro, vamos visualizar a série.
 autoplot(auscafe, main = 'Gastos mensais em comer fora na Austrália',
                xlab = 'Tempo (mensal)', ylab = 'Billion dolars')
 ```
-
-# Referências
