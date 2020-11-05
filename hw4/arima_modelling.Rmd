@@ -178,6 +178,8 @@ Esse é o gráfico da projeção 3 passos a frente.
 forecast(model, h = 3) %>% autoplot()
 ```
 
+\pagebreak
+
 # Uso de cartão de débito
 
 Primeiro, vamos visualizar a série. Percebemos uma sutil sazonalidade, aparentemente anual, além de uma clara tendência. 
@@ -335,6 +337,8 @@ Agora vamos conferir as projeções três passos a frente.
 ```{r, echo=F}
 forecast(model, h = 3) %>% autoplot()
 ```
+
+\pagebreak
 
 # Comer fora na Austrália
 
