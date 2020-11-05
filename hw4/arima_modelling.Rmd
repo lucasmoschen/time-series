@@ -13,6 +13,7 @@ link-citations: yes
 library(fpp2)
 library(forecast)
 library(tseries)
+library(qpcR)
 ```
 
 # Método Box-Jenkins 
@@ -75,9 +76,9 @@ O próximo passo do método de Box-Jenkins é identificar os parâmetros $p, q, 
 
 ### Teste de Estacionaridade ADF
 
-O teste ADF veririfica se há presença de uma raíz unitária na série temporal. A hipótese nula é de que a série possui raíz unitária e é, portanto, não estacionária. Em contrapartida, a alternativa é que a série é estacionária.  Vamos considerar *p-valor* $  < 0.05$ como evidência para rejeitar a hipótese nula, nesse e nos próximos testes que realizarmos. 
+O teste ADF veririfica se há presença de uma raíz unitária na série temporal. A hipótese nula é de que a série possui raíz unitária e é, portanto, não estacionária. Em contrapartida, a alternativa é que a série é estacionária.  Vamos considerar *p-valor* $< 0.05$ como evidência para rejeitar a hipótese nula, nesse e nos próximos testes que realizarmos. 
 
-```{r}
+```{r,echo=F}
 adf.test(bcwmurders, alternative = 'stationary')
 ```
 
@@ -93,7 +94,7 @@ autoplot(dwmurders, main = 'Total de mulheres assassinadas por 100 mil habitante
          xlab = 'Tempo (anual)', ylab = 'Total anual')
 ```
 
-```{r}
+```{r,echo=F}
 adf.test(dwmurders)
 ```
 
@@ -113,6 +114,12 @@ Obtemos um pico no segundo lag, mas não podemos tomar nenhuma conclusão. Poder
 
 ### Critérios de Informação 
 
+Vamos utilizar os critérios de informação estudados: 
+
+- Akaike Information Criterion (AIC)
+- Akaike Information Criterion with Correction (AICc)
+- Bayesian Information Criterion (BIC)
+
 ```{r, echo = F}
 ARMA.res <- data.frame()
 ## valor máximo de p,q.
@@ -121,6 +128,7 @@ L <- K
 for (p in 0:K) {
     for (q in 0:K) {
         model <- Arima(y = dwmurders, order = c(p, 0, q))
+        
         ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
     }
 }
@@ -132,30 +140,43 @@ library(knitr)
 kable(ARMA.res)
 ```
 
-Baseado no AIC e AICc, o modelo é (0,2). O BIC também caracteriza (0,2) como um bom modelo. 
+A partir da tabela, podemos checar alguns pontos: AIC e AICc são bem similares, então vamos ter uma escolha de modelo que respeite ambas as informações. Baseado nelas, o modelo ARMA(0,2) é o que minimiza as informações. Já o BIC é um pouco diferente e em particular ele seleciona o modelo ARMA(0,0) como já havíamos imaginado dados os gráficos. Porém vamos seguir com o modelo ARMA(0,2) dada a liberdade dos coeficientes que ganhamos. Podemos então estimar os coeficientes do modelo ARIMA(0,1,2).
 
 ## Estimação 
 
-```{r}
+Para fazer a estimação, vamos utilizar a função `forecast::Arima` que permite fazer o processo de transformação que fizemos inicialmente com o mesmo método, faz a diferenciação e depois estima os coeficientes. Vejamos o sumário do modelo fittado. 
+
+```{r, echo=F}
 model <- Arima(wmurders, order = c(0,1,2), lambda = "auto")
 summary(model)
 ```
 
+agora temos a estimação do modelo e os correspondentes erro de treino. A partir desse modelo treinado, podemos fazer a diagnose do resíduos. 
+
 ## Diagnóstico 
 
-```{r}
+Vamos utilizar a função `checkresiduals` para fazer a análise inicial dos resíduos gráfica e também utilizaremos os testes Ljung-Box e Jarque Bera.
+
+O teste Ljung-Box testa se as $k-$correlações do modelo são nulas. Isto é, a hipótese nula é que os dados são distribuídos de forma descorrelacionada, enquanto a aleternativa é que alguma autocoorelação é não nula. 
+
+Já o teste Jarque-Beta é sobre a assimetria e a kurtose da distribuição normal. A hipótese nula é que a assimetria é 0 e excesso de kurtose 0. 
+
+```{r, echo=F}
 checkresiduals(model)
 jarque.bera.test(model$residuals)
 ```
 
-Não rejeitamos nenhuma das hipóteses. Estamos satisfeitos. 
+A ACF dos resíduos é muito interessante, dados que todas estão entre as faixas de confiança de zero. Já é um indicativo de um processo estacionário, ruído branco. O histograma parece um pouco não simétrico, mas ainda sim a sua suavização tem uma cara de normal bem acentuada. Os resultados dos testes também são interessantes, dado que ambos não rejeitam as suas hipóteses nulas. Ou seja, não temos evidência para rejeitá-las. 
+
+Assim estamos contentes com o modelo, e podemos fazer projeções. 
 
 ## Projeção 
 
-```{r}
+Esse é o gráfico da projeção 3 passos a frente. 
+
+```{r, echo=F}
 forecast(model, h = 3) %>% autoplot()
 ```
-
 
 # Uso de cartão de débito
 
@@ -168,7 +189,7 @@ autoplot(debitcards, main = 'Uso de cartão de débito no varejo na Islândia',
 
 ## Transformação Box-Cox
 
-Pelo gráfico, parece que teremos que fazer alguma transformação de estabilidade da variância. Para isso, vamos utilizar a transformação Box-Cox.
+Pelo gráfico, parece que teremos que fazer alguma transformação de estabilidade da variância. Para isso, vamos utilizar a transformação Box-Cox, como explicada na série anterior. 
 
 ```{r, echo=F}
 lambda <- BoxCox.lambda(debitcards)
@@ -184,7 +205,7 @@ Agora, com a variância da série estabilizada, podemos fazer o teste de estacio
 
 ### Teste de Estacionaridade ADF
 
-```{r}
+```{r, echo=F}
 adf.test(bcdebitcards)
 ```
 
