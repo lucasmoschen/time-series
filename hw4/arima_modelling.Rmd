@@ -223,7 +223,7 @@ autoplot(ddebitcards, main = 'Uso de cartão de débito no varejo na Islândia',
 adf.test(ddebitcards)
 ```
 
-Assim, podemos rejeitar a hipótese nula, o que suporta a ideia de que a série é estacionária. Vamos considerar
+Assim, podemos rejeitar a hipótese nula, o que suporta a ideia de que a série é estacionária. Vamos considerar os gráficos da ACF e PACF. 
 
 ### ACF e PACF
 
@@ -233,7 +233,19 @@ acf(ddebitcards)
 pacf(ddebitcards)
 ```
 
-Percebemos dois fatores bem destacados: uma grande correlação quando o $\text{Lag} = 12$, o que indica que existe uma sazonalidade anual; e que a PACF decresce exponencialmente, enquanto a ACF morre após $\text{Lag} = 1$, o que nos levaria a um modelo MA(1). Antes disso, vamos fazer uma diferenciação a cada 12 meses. 
+Percebemos dois fatores bem destacados: uma grande correlação quando o $\text{Lag} = 12$, o que indica que existe uma sazonalidade anual; e que a PACF decresce exponencialmente, enquanto a ACF morre após $\text{Lag} = 1$, o que nos levaria a um modelo MA(1). 
+
+Antes disso, vamos verificar a sazonalidade anual, como é nossa hipótese. Para isso, vamos utilizar o teste Kruskal-Wallis, como já utilizado em outros trabalhos. 
+
+```{r, echo=F}
+freq = 12
+g <- factor(rep(c(1:freq), ceiling(length(ddebitcards)/freq))[1:length(ddebitcards)])
+kruskal.test(ddebitcards, g)
+```
+
+Como o p-valor $<0.05$, rejeitamos a hipótese nula de que os coeficientes $\alpha_1 = ... = \alpha_{11} = 0$ e, portanto, existe sazonalidade determinística. Para removê-la, precisamos usar uma diferenciação anual. Segue o resultado:
+
+### Diferenciação Sazonal
 
 ```{r, echo=F}
 ddebitcards <- diff(ddebitcards, 12)
@@ -245,15 +257,19 @@ autoplot(ddebitcards, main = 'Uso de cartão de débito no varejo na Islândia',
 adf.test(ddebitcards)
 ```
 
+O teste ADF confirma que ainda temos uma série estacionária. 
+
 Observe que ainda temos uma série estacionária. Vejamos a ACF e PACF novamente: 
 
 ```{r, echo=F}
 par(mfrow = c(1,2))
-acf(ddebitcards)
-pacf(ddebitcards)
+acf(ddebitcards, lag = 48)
+pacf(ddebitcards, lag = 48)
 ```
 
-O pico diminuiu consideravelmente. Agora, sim, vamos considerar os critérios de informação para identificar o modelo.
+O pico diminuiu consideravelmente. Entretanto ele ainda existe, o que pode ser indicaticativo de haver algum termo autorregressivo e de média móvel sazonais. Para isso, vou fazer duas considerações, os modelos sem esses termo sazonal de média móvel, apenas com a diferença, e aqueles com diferenças. Vamos compará-los usando os critérios de informação. 
+
+*Observação:* Não foi possível adicionar termo AR sazonal em alguns modelos dado problema de estacionariedade. Como não nos aprofundamos desse tema, descartei da análise. 
 
 ### Critérios de Informação
 
@@ -264,11 +280,13 @@ K <- trunc(log(length(ddebitcards)))
 L <- K
 for (p in 0:K) {
     for (q in 0:K) {
-        model <- Arima(y = ddebitcards, order = c(p, 0, q))
-        ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
+        model1 <- Arima(y = ddebitcards, order = c(p, 0, q))
+        model2 <- Arima(y = ddebitcards, order = c(p, 0, q), seasonal = c(0,0,1))
+        ARMA.res <- rbind(ARMA.res, c(p,q,model1$aic, model1$bic, model1$aicc,
+                                          model2$aic, model2$bic, model2$aicc))
     }
 }
-names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICC')
+names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICc', 'AIC (S)', 'BIC (S)', 'AICc (S)')
 ```
 
 ```{r, echo = F, message=F}
@@ -276,29 +294,39 @@ library(knitr)
 kable(ARMA.res)
 ```
 
-Baseado no AIC e AICc, o modelo é ARMA(2,5). Baseado no BIC escolhemos um modelo bem mis simples, ARMA(2,0). Vou seguir com o modelo com mais parâmetros. 
+Baseado no AIC e AICc, o modelo é ARMA(2,3)(0,1) é o escolhido. Felizmente o BIC concorda com essa hipótese, então esse é o modelo escolhido.  
 
 ## Estimação 
 
 Estimamos os parâmetros do modelo, considerando uma diferenciação sazonal. 
 
 ```{r}
-model <- Arima(debitcards, order = c(2,1,5), seasonal = c(0,1,0), lambda = "auto")
+model <- Arima(debitcards, order = c(2,1,3), seasonal = c(0,1,1), lambda = "auto")
 summary(model)
 ```
 
+Temos, portanto, o resultado da estimação. 
+
 ## Diagnóstico 
 
-Aqui podemos conferir os resíduos. É importante detacar a aparência normal dos resíduos, o que é interessante. Porém a ACF ainda apresenta picos, o mais incomodativo é do período 12. 
+Aqui podemos conferir os resíduos. É importante detacar a aparência normal dos resíduos, apesar de que existe uma aparente  assimetria. Porém a ACF ainda apresenta picos, o que é um pouco complicado, mas compreensível. 
 
-O test Ljung-Box coorrobora esse fato, rejeitando a hipótese nula de que os coeficientes de correlação são iguais. Já Jarque Bera não rejeita a normalidade, como esperávamos. 
+O test Ljung-Box coorrobora esse fato, rejeitando a hipótese nula de que os coeficientes de correlação são iguais. Já Jarque Bera também rejeita a hipótese nula, o que nos dá evidência suficiente para rejeitar a  normalidade dos resíduos, dada a aparente assimetria. 
 
 ```{r}
 checkresiduals(model)
 jarque.bera.test(model$residuals)
 ```
 
-O persistente pico pode ser um indicativo de que a série sazonal precise de coeficientes ARMA. Em particular, poderíamos colocar ARMA sazonal. Isso fica para as próximas análises. 
+Apenas olhandos os resíduos, fica muito difícil de propor alguma mudança. Todavia uma proposição interessante seria retirar a média móvel sazonal.
+
+```{r}
+model <- Arima(debitcards, order = c(2,1,3), seasonal = c(0,1,0), lambda = "auto")
+checkresiduals(model)
+jarque.bera.test(model$residuals)
+```
+
+Apesar de termos piorado o lag 12, que ainda continua com o pico, resolvemos o problema da normalidade, de certa forma. 
 
 ## Projeção 
 
