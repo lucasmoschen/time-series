@@ -71,15 +71,21 @@ annotate("text", x=1955, y=1.3, label= paste('lambda = ', round(lambda, digits =
 
 ## Identificação 
 
+O próximo passo do método de Box-Jenkins é identificar os parâmetros $p, q, d$ do modelo ARIMA. O primeiro passo é reduzir para um modelo ARMA estacionário e, para isso, precisamos diferenciar o quanto foi necessário. Vamos utilizar o teste *Augmented Dickey-Fuller* para conferir a estacionariedade. 
+
 ### Teste de Estacionaridade ADF
 
+O teste ADF veririfica se há presença de uma raíz unitária na série temporal. A hipótese nula é de que a série possui raíz unitária e é, portanto, não estacionária. Em contrapartida, a alternativa é que a série é estacionária.  Vamos considerar *p-valor* $  < 0.05$ como evidência para rejeitar a hipótese nula, nesse e nos próximos testes que realizarmos. 
+
 ```{r}
-adf.test(bcwmurders)
+adf.test(bcwmurders, alternative = 'stationary')
 ```
 
-Como $\text{p-valor} \ge 0.05$, inferimos a não estacioanridade.  
+Como $\text{p-valor} \ge 0.05$, não podemos rejeitar a hipótese nula de que a série é não estacionária. Em particular, inferimos que a série é não estacionária, e por isso vamos diferenciá-la uma vez. 
 
 ### Diferenciando 
+
+Tomemos a primeira diferença e, assim, podemos refazer o teste ADF novamente. 
 
 ```{r, echo=F}
 dwmurders <- diff(bcwmurders)
@@ -91,13 +97,21 @@ autoplot(dwmurders, main = 'Total de mulheres assassinadas por 100 mil habitante
 adf.test(dwmurders)
 ```
 
+Notemos que nosso *p-valor* $< 0.05$ e, então, rejeitamos a hipótese nula. Podemos, portanto, seguir a identificação do modelo ARMA. 
+
+### Autocorrelação e Autocorrelação Parcial 
+
+Vamos visualizar o comportamento da ACF e PACF da série diferenciada. 
+
 ```{r, echo=F}
 par(mfrow = c(1,2))
 acf(dwmurders)
 pacf(dwmurders)
 ```
 
-É inconclusivo, piriri, pororo. 
+Obtemos um pico no segundo lag, mas não podemos tomar nenhuma conclusão. Poderíamos afirmar, por exemplo, que ambos os gráficos morrem logo, o que indicaria um ruído branco. Mas para não falar isso de forma errônea, vamos considerar os critérios de informação. 
+
+### Critérios de Informação 
 
 ```{r, echo = F}
 ARMA.res <- data.frame()
