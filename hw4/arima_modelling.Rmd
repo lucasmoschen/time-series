@@ -157,9 +157,9 @@ agora temos a estimação do modelo e os correspondentes erro de treino. A parti
 
 Vamos utilizar a função `checkresiduals` para fazer a análise inicial dos resíduos gráfica e também utilizaremos os testes Ljung-Box e Jarque Bera.
 
-O teste Ljung-Box testa se as $k-$correlações do modelo são nulas. Isto é, a hipótese nula é que os dados são distribuídos de forma descorrelacionada, enquanto a aleternativa é que alguma autocoorelação é não nula. 
+O teste Ljung-Box testa se as $k-$correlações do modelo são nulas. Isto é, a hipótese nula é que os dados são distribuídos de forma descorrelacionada, enquanto a alternativa é que alguma autocorrelação é não nula. 
 
-Já o teste Jarque-Beta é sobre a assimetria e a kurtose da distribuição normal. A hipótese nula é que a assimetria é 0 e excesso de kurtose 0. 
+Já o teste Jarque-Beta é sobre a assimetria e a curtose da distribuição normal. A hipótese nula é que a assimetria é 0 e excesso de curtose 3. 
 
 ```{r, echo=F}
 checkresiduals(model)
