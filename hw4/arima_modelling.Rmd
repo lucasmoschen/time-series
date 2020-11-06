@@ -269,7 +269,12 @@ acf(ddebitcards, lag = 48)
 pacf(ddebitcards, lag = 48)
 ```
 
-O pico diminuiu consideravelmente. Entretanto ele ainda existe, o que pode ser indicaticativo de haver algum termo autorregressivo e de média móvel sazonais. Para isso, vou fazer duas considerações, os modelos sem esses termo sazonal de média móvel, apenas com a diferença, e aqueles com diferenças. Vamos compará-los usando os critérios de informação. 
+Os picos dos lags 12 e 24 diminuiram consideravelmente, entretanto eles ainda existem e mesmo diferenciando mais uma ou duas vezes, não foi possível resolvê-lo. Isso pode ser um indicativo de que haja algum termo autorregressivo e de média móvel sazonal, os modelos SARIMA que ainda não foram estudados em aula. Para isso, vou fazer duas considerações: 
+
+1. Um modelo sem termos sazonais AR e MA, apenas uma diferença sazonal; 
+2. Um modelo com um termo MA. 
+
+Vamos compará-los usando os critérios de informação. 
 
 *Observação:* Não foi possível adicionar termo AR sazonal em alguns modelos dado problema de estacionariedade. Como não nos aprofundamos desse tema, descartei da análise. 
 
