@@ -387,7 +387,7 @@ autoplot(dbcauscafe, main = 'Gastos mensais em comer fora na Austrália',
          xlab = 'Tempo (mensal)', ylab = 'Billion dolars')
 ```
 
-```{r}
+```{r, echo=F}
 adf.test(dbcauscafe)
 ```
 
@@ -489,5 +489,5 @@ Decidimos por escolher esse modelo.
 Vamos conferir as projeções três passos a frente.
 
 ```{r, echo=F}
-forecast(model, h = 3) %>% autoplot() + 
+forecast(model, h = 3) %>% autoplot()
 ```
