@@ -13,7 +13,6 @@ link-citations: yes
 library(fpp2)
 library(forecast)
 library(tseries)
-library(qpcR)
 ```
 
 # Método Box-Jenkins 
@@ -221,7 +220,7 @@ autoplot(ddebitcards, main = 'Uso de cartão de débito no varejo na Islândia',
                xlab = 'Tempo (mensal)', ylab = 'million ISK mensal')
 ```
 
-```{r}
+```{r,echo=F}
 adf.test(ddebitcards)
 ```
 
