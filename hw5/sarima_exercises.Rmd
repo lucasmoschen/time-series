@@ -1,0 +1,120 @@
+---
+title: "Modelos SARIMA e Previsões"
+author: "Lucas Domingues e Lucas Moschen"
+date: \today
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instruções 
+
+Neste trabalho você vai solucionar questões teóricas sobre previsão de modelos ARIMA e modelos SARIMA. Além disso, modelará uma série utilizando o método sarima.
+
+1. Solucione as questões 6 e 8 do capítulo 9 (Previsoes ARIMA) do livro texto
+2. Solucione a questão 3 do capítulo 10 do livro texto (arquivo anexo)
+3. Estime um modelo SARIMA para a série 'auscafe' do pacote 'fpp2'
+
+**Dica:**
+Para o problema 2 você pode usar o comando abaixo para transformar a série em objeto ts no R
+
+`consumo <- ts(CONSUMO$consumo, start = c(1984), frequency = 12)`
+
+# Questões Teóricas 
+
+## Questão 6 (Capítulo 9)
+
+Se $Y \sim N(\mu, \sigma^2)$, então $X$ tal que $\log X = Y$ terá uma distribuição log-normal com $E[X] = e^{\mu + \sigma^2/2}$ e $Var[X] = e^{2\mu + \sigma^2}(e^{\sigma^2} - 1)$. Baseado nessa definição, se $Y_t = \log Z_t$ e $Y_t$ é Gaussiano, então 
+$$
+\hat{Z}_t(h) = \exp\{\hat{Y}_t(h) + \frac{1}{2}V_y(h)\}
+$$
+$$
+V_Z(h) = \exp\{2\hat{Y}_t(h) + V_y(h)\}\left[\exp\{V_y(h)\} - 1\right]
+$$
+
+## Questão 8 (Capítulo 9)
+
+Considere o problema de encontrar a previsão linear ótima (erro quadrático médio mínimo) de um processo estacionário de média zero, $\{Z_t\}$, baseado em um número finito de observações, $Z_t, ..., Z_{t-r}$. Em resumo, queremos encontrar os coeficientes $a_i$ na fórmula de previsão
+
+
+$$
+\hat{Z}_t(h) = a_0Z_t + a_1Z_{t-1}+...+a_rZ_{t-r}
+$$
+que fornecem erro quadrático médio mínimo. 
+
+(a) Mostre que 
+$$
+\begin{split}
+E\left[(Z_{t+h} - \hat{Z}_t(h))^2\right] &= \gamma_0 - 2\sum_{i=0}^r a_i\gamma_{i+h} + \sum_{i=0}^r \sum_{j=0}^r a_ia_j\gamma_{i-j} \\
+&= \gamma_0 - 2\boldsymbol{a}' \gamma_r(h) + \boldsymbol{a}'\Gamma_{r+1}\boldsymbol{a},
+\end{split}
+$$
+onde 
+$$
+\Gamma_{r+1} = 
+\begin{bmatrix}
+\gamma_0 & \gamma_1 & ... & \gamma_r \\
+\gamma_1 & \gamma_0 & ... & \gamma_{r-1} \\
+... & ... & ... & ... \\
+\gamma_r & \gamma_{r-1} & ... & \gamma_0
+\end{bmatrix}, 
+\gamma_r(h) = 
+\begin{bmatrix}
+\gamma_h \\
+\gamma_{h+1} \\
+... \\
+\gamma_{h+r}
+\end{bmatrix}, 
+\boldsymbol{a} = 
+\begin{bmatrix}
+a_0 \\
+a_1 \\
+... \\
+a_r
+\end{bmatrix}
+$$
+
+(b) Encontre os $a_i$ que minimizam o EQM e mostre que as equações resultantes são $\Gamma_{r+1}\boldsymbol{a} = \gamma_r(h)$. 
+
+# Série Consumo - Questão 3 (Capítulo 10)
+
+Usando um programa de computador apropriado, obtenha as autocorrelações estimadas para $Z_t, \Delta Z_t, \Delta_4 Z_t, \Delta \Delta_4 Z_t$, sendo $Z_t$ a série de consumo de gasolina.
+
+```{r, echo=F, warning=F, message=F}
+library(readxl)
+library(tseries)
+library(fpp2)
+
+consumo <- ts(read_excel("CONSUMO.XLS")$consumo, start = c(1984), frequency = 12)
+```
+
+```{r plot-consumo, echo=F}
+autoplot(consumo, main = "Consumo trimestral de gasolina na Califórnia", 
+                  xlab = 'Tempo (trimestre)', 
+                  ylab = 'milhões de galões')
+```
+
+(a) O que você pode observar nas autocorrelações de $Z_t$? 
+
+(b) A mesma pergunta para $\Delta Z_t$. 
+
+(c) Qual das séries você consideraria estacionária?
+
+(d) Utilizando um programa de identificação, sugira um ou mais modelos adequados para a série; obtenha as estimativas preliminares para os parâmetros.
+
+(e) Obtenha as estimativas finais para os parâmetros do(s) modelo(s) através de um programa de estimação; verifique se o(s) modelo(s) é (são) adequado(s).
+
+(f) Obtenha previsões para 1974 utilizando o(s) modelo(s) estimado(s).
+
+# Série de serviços da Austrália 
+
+Essa série representa o gasto mensal total em serviços de cafés, restaurantes e comida para levar na Austrália em bilhões de dólares. Vamos visualizar a série; 
+
+```{r visualize-serie-auscafe, echo=F}
+autoplot(auscafe, main = 'Gasto em cafés, restaurantes e comidas para levar na Austrália', 
+                  ylab = '$ bilhões', 
+                  xlab = 'Tempo')
+```
+
