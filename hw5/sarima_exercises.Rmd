@@ -33,12 +33,21 @@ $$
 $$
 V_Z(h) = \exp\{2\hat{Y}_t(h) + V_y(h)\}\left[\exp\{V_y(h)\} - 1\right]
 $$
+**Resposta:** Sabemos que a distribuição de $Y_{t+h}$ em um processo Gaussiano é $N(\hat{Y}_t(h), V_Y(h))$, onde 
+$$\hat{Y}_t(h) = E[Y_{t+h}|Y_t, Y_{t-1}, ...]$$ 
+Como $Z_{t+h} = \log Y_{t+h}$, pelo enunciado, a distribuição de $Z_{t+h}|Z_t, Z_{t-1}, ..$ é uma log-normal, tal que: 
+$$
+\hat{Z}_t(h) = E[Z_{t+h}|Z_t, Z_{t-1},...] = e^{\hat{Y}_t(h) + \frac{1}{2}V_Y(h)}
+$$
+$$
+V_Z(h) = e^{2\hat{Y}_t(h)  + V_Y(h)}(e^{V_Y(h)} - 1)
+$$
+
+utilizando os valores do valor esperado e variância descritos. Isso demonstra a relação.
 
 ## Questão 8 (Capítulo 9)
 
 Considere o problema de encontrar a previsão linear ótima (erro quadrático médio mínimo) de um processo estacionário de média zero, $\{Z_t\}$, baseado em um número finito de observações, $Z_t, ..., Z_{t-r}$. Em resumo, queremos encontrar os coeficientes $a_i$ na fórmula de previsão
-
-
 $$
 \hat{Z}_t(h) = a_0Z_t + a_1Z_{t-1}+...+a_rZ_{t-r}
 $$
@@ -74,6 +83,14 @@ a_1 \\
 ... \\
 a_r
 \end{bmatrix}
+$$
+
+**Resposta**: Temos a seguinte expressão, usando usando a forma invertida, 
+
+$$
+\begin{split}
+E\left[(Z_{t+h} - \hat{Z}_t(h))^2\right] = E\left[\left(\sum_{i=1}^{\infty} \pi_iZ_{t+h-i} - \sum_{i=1}^r a_iZ_{t-i}\right)^2\right]
+\end{split}
 $$
 
 (b) Encontre os $a_i$ que minimizam o EQM e mostre que as equações resultantes são $\Gamma_{r+1}\boldsymbol{a} = \gamma_r(h)$. 
