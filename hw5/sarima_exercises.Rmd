@@ -141,9 +141,30 @@ autoplot(consumo, main = "Consumo trimestral de gasolina na Califórnia",
 
 (a) O que você pode observar nas autocorrelações de $Z_t$? 
 
-(b) A mesma pergunta para $\Delta Z_t$. 
+```{r, echo=F}
+x <- acf(consumo, lag.max = 48, plot = F)
+x$lag <- x$lag * 12
+plot(x, main = 'Autocorrelação Zt', 
+        xlab="Lag (meses)")
+```
+
+Podemos observar um decaimento exponencial no gráfico acima que cai no intervalo de signifificância aapenas após o lag 25. Também podemos observar que os lags 12, 23 e 36 tem picos fora do comum que indicam sazonalidade. 
+
+(b) A mesma pergunta para $\Delta Z_t$.
+
+```{r, echo=F}
+
+x <- acf(diff(consumo), lag.max = 48, plot = F)
+x$lag <- x$lag * 12
+plot(x, main = 'Autocorrelação Zt', 
+        xlab="Lag (meses)")
+```
+
+**Resposta:** Podemos observar que grande parte da ACF foi anulada, apenas os lags que indicam uma diferença dos picos de sazonalidade, e os próprios picos. 
 
 (c) Qual das séries você consideraria estacionária?
+
+**Resposta:** Nenhuma das séries eu consideraria estacionária. Quando fizemos a primeira diferença, vários lags desapareceram o que indica uma uma tendência na série original. Porém a segunda série também apresenta lags nos períodos 12, 24,36 e 48, o que indica a sazonalidade que já havíamos notado. 
 
 (d) Utilizando um programa de identificação, sugira um ou mais modelos adequados para a série; obtenha as estimativas preliminares para os parâmetros.
 
