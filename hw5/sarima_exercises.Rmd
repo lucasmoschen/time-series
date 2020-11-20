@@ -85,15 +85,41 @@ a_r
 \end{bmatrix}
 $$
 
-**Resposta**: Temos a seguinte expressão, usando usando a forma invertida, 
-
+**Resposta**: Temos a seguinte expressão:
 $$
 \begin{split}
-E\left[(Z_{t+h} - \hat{Z}_t(h))^2\right] = E\left[\left(\sum_{i=1}^{\infty} \pi_iZ_{t+h-i} - \sum_{i=1}^r a_iZ_{t-i}\right)^2\right]
+E\left[(Z_{t+h} - \hat{Z}_t(h))^2\right] &= E\left[\left(Z_{t+h} - \sum_{i=0}^r a_iZ_{t-i}\right)^2\right] \\
+&= E\left[Z_{t+h}^2  - 2Z_{t+h}\sum_{i=0}^r a_iZ_{t-i} + \left(\sum_{i=0}^r a_i Z_{t-i}\right)^2\right] \\
+&= E[Z_{t+h}^2] - 2\sum_{i=0}^r a_i E[Z_{t+h}Z_{t-i}] + \sum_{i=0}^r\sum_{j=0}^r a_i a_j E[Z_{t-i}Z_{t-j}] \\
+&= \gamma_0 - 2\sum_{i=0}^r a_i\gamma_{h+i} + \sum_{i=0}\sum_{j=0}a_ia_j\gamma_{i-j} \\
+&= \gamma_0 - 2\boldsymbol{a}'\gamma_r(h) + \boldsymbol{a}'\Gamma_{r+1}\boldsymbol{a}
 \end{split}
 $$
+onde a última igualdade vem da definição dada pelo enunciado e usando a notação de produto matricial. 
 
 (b) Encontre os $a_i$ que minimizam o EQM e mostre que as equações resultantes são $\Gamma_{r+1}\boldsymbol{a} = \gamma_r(h)$. 
+
+**Resposta:** Queremos minimizar a expressão 
+$$
+\gamma_0 - 2\boldsymbol{a}^T\gamma_r(h) + \boldsymbol{a}^T\Gamma_{r+1}\boldsymbol{a}
+$$
+Equivalente a minimizar
+$$
+f(\boldsymbol{a}) = - 2\boldsymbol{a}^T\gamma_r(h) + \boldsymbol{a}^T\Gamma_{r+1}\boldsymbol{a}
+$$
+Para isso, fazemos 
+$$
+\nabla f(\boldsymbol{a}) = - 2\gamma_r(h) + 2\Gamma_{r+1}\boldsymbol{a} = 0 \implies \Gamma_{r+1}\boldsymbol{a} = \gamma_r(h)
+$$
+Vamos verificar a segunda derivada
+$$
+\text{Hess}(f(a)) = 2\Gamma_{r+1}
+$$
+Como a matriz de covariância é positiva semi-definida e, nesse caso, definida, temos um mínimo local quando
+$$
+\Gamma_{r+1}\boldsymbol{a} = \gamma_r(h),
+$$
+como queríamos provar. 
 
 # Série Consumo - Questão 3 (Capítulo 10)
 
