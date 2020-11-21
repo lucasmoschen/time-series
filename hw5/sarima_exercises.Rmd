@@ -168,9 +168,53 @@ plot(x, main = 'Autocorrelação Zt',
 
 (d) Utilizando um programa de identificação, sugira um ou mais modelos adequados para a série; obtenha as estimativas preliminares para os parâmetros.
 
+**Resposta:** Vamos utilizar a função `auto.arima` para identificar o modelo.
+
+```{r, echo=F}
+id <- auto.arima(consumo)
+summary(id)
+```
+
+Vemos que o programa identifica um ARIMA(1,0,1)(0,1,1)[12]. Além disso, ele mostra as estimativas preliminares dos coeficientes.
+
 (e) Obtenha as estimativas finais para os parâmetros do(s) modelo(s) através de um programa de estimação; verifique se o(s) modelo(s) é (são) adequado(s).
 
+**Resposta:** Será utilizada a função `Arima`, que estima os parâmetros do modelo de dada ordem. Além disso, ela permite incluir o parâmetro `lambda` para a transformação de Box-Cox.
+
+Vejamos o resultado da estimação para um modelo ARIMA(1,0,1)(0,1,1)[12] com parâmetro `lambda` escolhido automaticamente:
+
+```{r, echo=F}
+est <- Arima(consumo, order = c(1,0,1), seasonal =  c(0,1,1), lambda = "auto")
+summary(est)
+```
+
+Observamos que as estimativas atuais dos parâmetros são próximas daquelas preliminares (do exercício anterior). O parâmetro `lambda` também é estimado.
+
+Vamos analisar os resíduos, através de seu gráfico, sua ACF e seu histograma:
+
+```{r, echo=F}
+checkresiduals(est)
+```
+
+O teste de Ljung-Box nos resíduos nos dá boas notícias: não rejeitamos a hipótese de dados não correlacionados. Observamos que a ACF nos indica que os resíduos se comportam como esperaríamos de um ruído gaussiano.
+
+Vejamos o resultado de `ggtsdisplay` para os resíduos:
+
+```{r, echo=F}
+ggtsdisplay(est$residuals)
+```
+
+A PACF também se comporta dentro do intervalo de confiança para que consideremos o resíduo como um ruído branco. Vamos ficar com esse modelo.
+
 (f) Obtenha previsões para 1974 utilizando o(s) modelo(s) estimado(s).
+
+**Resposta:** O ano 1974 é no passado. A última observação é de outubro de 1996. Vamos prever 12 meses à frente utilizando nosso modelo e também mostrando os intervalos de confiança:
+
+```{r, echo=F}
+autoplot(forecast(est, h=12, level = c(80, 90, 95)))
+```
+
+Visualmente, isso parece um tanto razoável.
 
 # Série de serviços da Austrália 
 
