@@ -26,21 +26,21 @@ Para o problema 2 você pode usar o comando abaixo para transformar a série em 
 
 ## Questão 6 (Capítulo 9)
 
-Se $Y \sim N(\mu, \sigma^2)$, então $X$ tal que $\log X = Y$ terá uma distribuição log-normal com $E[X] = e^{\mu + \sigma^2/2}$ e $Var[X] = e^{2\mu + \sigma^2}(e^{\sigma^2} - 1)$. Baseado nessa definição, se $Y_t = \log Z_t$ e $Y_t$ é Gaussiano, então 
+Se $Y \sim N\left(\mu, \sigma^2\right)$, então $X$ tal que $\log X = Y$ terá uma distribuição log-normal com $E[X] = e^{\mu + \sigma^2/2}$ e $Var[X] = e^{2\mu + \sigma^2}\left(e^{\sigma^2} - 1\right)$. Baseado nessa definição, se $Y_t = \log Z_t$ e $Y_t$ é Gaussiano, então 
 $$
-\hat{Z}_t(h) = \exp\{\hat{Y}_t(h) + \frac{1}{2}V_y(h)\}
+\hat{Z}_t(h) = \exp\left\{\hat{Y}_t(h) + \frac{1}{2}V_y(h)\right\}
 $$
 $$
-V_Z(h) = \exp\{2\hat{Y}_t(h) + V_y(h)\}\left[\exp\{V_y(h)\} - 1\right]
+V_Z(h) = \exp\left\{2\hat{Y}_t(h) + V_y(h)\right\}\left[\exp\{V_y(h)\} - 1\right]
 $$
-**Resposta:** Sabemos que a distribuição de $Y_{t+h}$ em um processo Gaussiano é $N(\hat{Y}_t(h), V_Y(h))$, onde 
+**Resposta:** Sabemos que a distribuição de $Y_{t+h}$ em um processo Gaussiano é $N\left(\hat{Y}_t(h), V_Y(h)\right)$, onde 
 $$\hat{Y}_t(h) = E[Y_{t+h}|Y_t, Y_{t-1}, ...]$$ 
 Como $Z_{t+h} = \log Y_{t+h}$, pelo enunciado, a distribuição de $Z_{t+h}|Z_t, Z_{t-1}, ..$ é uma log-normal, tal que: 
 $$
 \hat{Z}_t(h) = E[Z_{t+h}|Z_t, Z_{t-1},...] = e^{\hat{Y}_t(h) + \frac{1}{2}V_Y(h)}
 $$
 $$
-V_Z(h) = e^{2\hat{Y}_t(h)  + V_Y(h)}(e^{V_Y(h)} - 1)
+V_Z(h) = e^{2\hat{Y}_t(h)  + V_Y(h)}\left(e^{V_Y(h)} - 1\right)
 $$
 
 utilizando os valores do valor esperado e variância descritos. Isso demonstra a relação.
@@ -148,7 +148,7 @@ plot(x, main = 'Autocorrelação Zt',
         xlab="Lag (meses)")
 ```
 
-Podemos observar um decaimento exponencial no gráfico acima que cai no intervalo de signifificância aapenas após o lag 25. Também podemos observar que os lags 12, 23 e 36 tem picos fora do comum que indicam sazonalidade. 
+Podemos observar um decaimento exponencial no gráfico acima que cai no intervalo de significância aapenas após o lag 25. Também podemos observar que os lags 12, 23 e 36 tem picos fora do comum que indicam sazonalidade. 
 
 (b) A mesma pergunta para $\Delta Z_t$.
 
@@ -164,7 +164,7 @@ plot(x, main = 'Autocorrelação Zt',
 
 (c) Qual das séries você consideraria estacionária?
 
-**Resposta:** Nenhuma das séries eu consideraria estacionária. Quando fizemos a primeira diferença, vários lags desapareceram o que indica uma uma tendência na série original. Porém a segunda série também apresenta lags nos períodos 12, 24,36 e 48, o que indica a sazonalidade que já havíamos notado. 
+**Resposta:** Nenhuma das séries consideraríamos estacionária. Quando fizemos a primeira diferença, vários lags desapareceram, o que indica uma uma tendência na série original. Porém a segunda série também apresenta lags nos períodos 12, 24, 36 e 48, o que indica a sazonalidade que já havíamos notado. 
 
 (d) Utilizando um programa de identificação, sugira um ou mais modelos adequados para a série; obtenha as estimativas preliminares para os parâmetros.
 
