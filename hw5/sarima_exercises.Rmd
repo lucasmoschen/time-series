@@ -135,7 +135,7 @@ plot(x, main = 'Autocorrelação Zt',
         xlab="Lag (meses)")
 ```
 
-Podemos observar um decaimento exponencial no gráfico acima que cai no intervalo de significância aapenas após o lag 25. Também podemos observar que os lags 12, 23 e 36 tem picos fora do comum que indicam sazonalidade. 
+Podemos observar um decaimento exponencial no gráfico acima que é não significante apenas após o lag 25. Também podemos observar que os lags 12, 23 e 36 tem picos fora do comum que indicam sazonalidade. 
 
 (b) A mesma pergunta para $\Delta Z_t$.
 
@@ -164,7 +164,7 @@ summary(id)
 
 Vemos que o programa identifica um ARIMA(1,0,1)(0,1,1)[12]. Além disso, ele mostra as estimativas preliminares dos coeficientes.
 
-Também podemos fazer uma identificação de um modelo alternativo feito artesanalmente. Primeiro fazemos uma trnsformação Box-Cox com o parâmetro $\lambda$ ótimo. Depois podemos fazer um teste de estacionariedade. Porém o teste ADF acusa que não rejeitamos a hipótese nula a nivel 0.05.
+Também podemos fazer uma identificação de um modelo alternativo feito artesanalmente. Primeiro fazemos uma transformação Box-Cox com o parâmetro $\lambda$ ótimo. Depois podemos fazer um teste de estacionariedade. Porém o teste ADF acusa que não rejeitamos a hipótese nula (de não estacionariedade) a nível 0,05.
 
 ```{r, echo=F}
 lambda <- BoxCox.lambda(consumo)
@@ -173,11 +173,16 @@ consumo.bc <- BoxCox(consumo, lambda)
 adf.test(consumo.bc)
 ```
 
-Portanto, fazemos uma diferença e refazemos o teste. Nesse caso possuimos a estacionaridade desejada. Como ainda temos a sazonalidade já observada, também fazemos a diferença sazonal e, assim: 
+Portanto, fazemos uma diferença e refazemos o teste.
 
 ```{r, echo=F}
 consumo.diff = diff(consumo.bc) 
 adf.test(consumo.diff)
+```
+
+Nesse caso possuimos a estacionaridade desejada. Como ainda temos a sazonalidade já observada, também fazemos a diferença sazonal e, assim: 
+
+```{r, echo=F}
 consumo.diff = diff(consumo.diff, 12)
 ggtsdisplay(consumo.diff)
 ```
@@ -207,7 +212,7 @@ print('Modelo com menor BIC')
 print(ARMA.res[order(ARMA.res$BIC)[1],])
 ```
 
-Em particular, as três informações escolheram o modelo $ARIMA(2,1,0)(0,1,1)[12]$. Por isso, esse é nosso modelo alternativo.
+Em particular, as três informações escolheram o modelo ARIMA(2,1,0)(0,1,1)[12]. Por isso, esse é nosso modelo alternativo.
 
 (e) Obtenha as estimativas finais para os parâmetros do(s) modelo(s) através de um programa de estimação; verifique se o(s) modelo(s) é (são) adequado(s).
 
@@ -228,7 +233,7 @@ Vamos analisar os resíduos, através de seu gráfico, sua ACF e seu histograma:
 checkresiduals(est)
 ```
 
-O teste de Ljung-Box nos resíduos nos dá boas notícias: não rejeitamos a hipótese de dados não correlacionados. Observamos que a ACF nos indica que os resíduos se comportam como esperaríamos de um ruído gaussiano. Todavia, o teste jarque.bera rejeita a hipétese nula de que a assimetria e o excesso de curtose são nulos. Isso nos dá evidência para a não gaussianidade.  
+O teste de Ljung-Box nos resíduos nos dá boas notícias: não rejeitamos a hipótese de dados não correlacionados. Observamos que a ACF nos indica que os resíduos se comportam como esperaríamos de um ruído gaussiano. Todavia, o teste jarque.bera rejeita a hipótese nula de que a assimetria e o excesso de curtose são nulos. Isso nos dá evidência para a não normalidade.  
 
 ```{r, echo=F}
 jarque.bera.test(est$residuals)
@@ -243,7 +248,7 @@ ggtsdisplay(est$residuals)
 
 A PACF também se comporta dentro do intervalo de confiança para que consideremos o resíduo como um ruído branco. 
 
-Para o modelo alternativo, façamos o mesmo processo. 
+Para o modelo alternativo ARIMA(2,1,0)(0,1,1)[12], façamos o mesmo processo. 
 
 ```{r, echo=F}
 est2 <- Arima(consumo, order = c(2,1,0), seasonal =  c(0,1,1), lambda = "auto")
@@ -256,12 +261,12 @@ Observamos que alguns indicadores de erros nos mostram que o modelo é pior: tem
 checkresiduals(est2)
 ```
 
-A ACF dos resíduis está particularmente boa! Além disso os resíduos tem um padrão normal também! Além disso o teste de Ljung-BOx não rejeita a hipótese nula de que não existe correlação. O que é uma boa notícia. Vamos ver o jarque.bera.
+A ACF dos resíduis está particularmente boa! Além disso o teste de Ljung-Box não rejeita a hipótese nula de que não existe correlação, o que é uma boa notícia. Vamos ver o Jarque-Bera.
 
 ```{r, echo=F}
 jarque.bera.test(est2$residuals)
 ```
-O teste de Jarque Bera também rejeita a hipótese nula, o que não nos dá muito insight sobre o modelo ideial. 
+O teste de Jarque Bera também rejeita a hipótese nula, o que não nos dá muito \textit{insight} sobre o modelo ideial. 
 
 Vamos utilizar o primeiro modelo para previsão, dado que obteve menor RMSE. 
 
