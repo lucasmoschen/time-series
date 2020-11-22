@@ -9,19 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Instruções 
-
-Neste trabalho você vai solucionar questões teóricas sobre previsão de modelos ARIMA e modelos SARIMA. Além disso, modelará uma série utilizando o método sarima.
-
-1. Solucione as questões 6 e 8 do capítulo 9 (Previsoes ARIMA) do livro texto
-2. Solucione a questão 3 do capítulo 10 do livro texto (arquivo anexo)
-3. Estime um modelo SARIMA para a série 'auscafe' do pacote 'fpp2'
-
-**Dica:**
-Para o problema 2 você pode usar o comando abaixo para transformar a série em objeto ts no R
-
-`consumo <- ts(CONSUMO$consumo, start = c(1984), frequency = 12)`
-
 # Questões Teóricas 
 
 ## Questão 6 (Capítulo 9)
@@ -164,7 +151,7 @@ plot(x, main = 'Autocorrelação Zt',
 
 (c) Qual das séries você consideraria estacionária?
 
-**Resposta:** Nenhuma das séries consideraríamos estacionária. Quando fizemos a primeira diferença, vários lags desapareceram, o que indica uma uma tendência na série original. Porém a segunda série também apresenta lags nos períodos 12, 24, 36 e 48, o que indica a sazonalidade que já havíamos notado. 
+**Resposta:** Não consideramos nenhuma das séries estacionária. Quando fizemos a primeira diferença, vários lags desapareceram, o que indica uma uma tendência na série original. Porém a segunda série também apresenta lags nos períodos 12, 24, 36 e 48, o que indica a sazonalidade que já havíamos notado. 
 
 (d) Utilizando um programa de identificação, sugira um ou mais modelos adequados para a série; obtenha as estimativas preliminares para os parâmetros.
 
@@ -176,6 +163,51 @@ summary(id)
 ```
 
 Vemos que o programa identifica um ARIMA(1,0,1)(0,1,1)[12]. Além disso, ele mostra as estimativas preliminares dos coeficientes.
+
+Também podemos fazer uma identificação de um modelo alternativo feito artesanalmente. Primeiro fazemos uma trnsformação Box-Cox com o parâmetro $\lambda$ ótimo. Depois podemos fazer um teste de estacionariedade. Porém o teste ADF acusa que não rejeitamos a hipótese nula a nivel 0.05.
+
+```{r, echo=F}
+lambda <- BoxCox.lambda(consumo)
+consumo.bc <- BoxCox(consumo, lambda)
+
+adf.test(consumo.bc)
+```
+
+Portanto, fazemos uma diferença e refazemos o teste. Nesse caso possuimos a estacionaridade desejada. Como ainda temos a sazonalidade já observada, também fazemos a diferença sazonal e, assim: 
+
+```{r, echo=F}
+consumo.diff = diff(consumo.bc) 
+adf.test(consumo.diff)
+consumo.diff = diff(consumo.diff, 12)
+ggtsdisplay(consumo.diff)
+```
+
+Observe que a ACF (morte após lag 12) + PACF (decaimento exponencial) nos lags da sazonalidade indicam um componente MA sazonal. Vamos utilizar os critérios de informação para definir o modelo final. Os valores máximos de $p$ e $q$ serão 3 porque tanto a ACF quando a PACF parecem morrer cedo. 
+
+```{r, echo = F}
+ARMA.res <- data.frame()
+## valor máximo de p,q.
+K <- 3
+L <- K
+for (p in 0:K) {
+    for (q in 0:K) {
+        model <- Arima(y = consumo,  
+                        order = c(p,1,q), 
+                        seasonal = c(0,1,1), 
+                        lambda = "auto")
+        ARMA.res <- rbind(ARMA.res, c(p,q,model$aic, model$bic, model$aicc))
+    }
+}
+names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICc')
+print('Modelo com menor AIC')
+print(ARMA.res[order(ARMA.res$AIC)[1],])
+print('Modelo com menor AICc')
+print(ARMA.res[order(ARMA.res$AICc)[1],])
+print('Modelo com menor BIC')
+print(ARMA.res[order(ARMA.res$BIC)[1],])
+```
+
+Em particular, as três informações escolheram o modelo $ARIMA(2,1,0)(0,1,1)[12]$. Por isso, esse é nosso modelo alternativo.
 
 (e) Obtenha as estimativas finais para os parâmetros do(s) modelo(s) através de um programa de estimação; verifique se o(s) modelo(s) é (são) adequado(s).
 
@@ -196,7 +228,12 @@ Vamos analisar os resíduos, através de seu gráfico, sua ACF e seu histograma:
 checkresiduals(est)
 ```
 
-O teste de Ljung-Box nos resíduos nos dá boas notícias: não rejeitamos a hipótese de dados não correlacionados. Observamos que a ACF nos indica que os resíduos se comportam como esperaríamos de um ruído gaussiano.
+O teste de Ljung-Box nos resíduos nos dá boas notícias: não rejeitamos a hipótese de dados não correlacionados. Observamos que a ACF nos indica que os resíduos se comportam como esperaríamos de um ruído gaussiano. Todavia, o teste jarque.bera rejeita a hipétese nula de que a assimetria e o excesso de curtose são nulos. Isso nos dá evidência para a não gaussianidade.  
+
+```{r, echo=F}
+jarque.bera.test(est$residuals)
+```
+
 
 Vejamos o resultado de `ggtsdisplay` para os resíduos:
 
@@ -204,7 +241,29 @@ Vejamos o resultado de `ggtsdisplay` para os resíduos:
 ggtsdisplay(est$residuals)
 ```
 
-A PACF também se comporta dentro do intervalo de confiança para que consideremos o resíduo como um ruído branco. Vamos ficar com esse modelo.
+A PACF também se comporta dentro do intervalo de confiança para que consideremos o resíduo como um ruído branco. 
+
+Para o modelo alternativo, façamos o mesmo processo. 
+
+```{r, echo=F}
+est2 <- Arima(consumo, order = c(2,1,0), seasonal =  c(0,1,1), lambda = "auto")
+summary(est2)
+```
+
+Observamos que alguns indicadores de erros nos mostram que o modelo é pior: tem maior erro média, maior raiz do erro quadrático e erro percentual, mas tem menor MAE, MAPE, MASE e ACF1. 
+
+```{r, echo=F}
+checkresiduals(est2)
+```
+
+A ACF dos resíduis está particularmente boa! Além disso os resíduos tem um padrão normal também! Além disso o teste de Ljung-BOx não rejeita a hipótese nula de que não existe correlação. O que é uma boa notícia. Vamos ver o jarque.bera.
+
+```{r, echo=F}
+jarque.bera.test(est2$residuals)
+```
+O teste de Jarque Bera também rejeita a hipótese nula, o que não nos dá muito insight sobre o modelo ideial. 
+
+Vamos utilizar o primeiro modelo para previsão, dado que obteve menor RMSE. 
 
 (f) Obtenha previsões para 1974 utilizando o(s) modelo(s) estimado(s).
 
