@@ -218,11 +218,148 @@ Visualmente, isso parece um tanto razoável.
 
 # Série de serviços da Austrália 
 
-Essa série representa o gasto mensal total em serviços de cafés, restaurantes e comida para levar na Austrália em bilhões de dólares. Vamos visualizar a série; 
+Essa série representa o gasto mensal total em serviços de cafés, restaurantes e comida para levar na Austrália em bilhões de dólares. Vamos visualizar a série:
 
 ```{r visualize-serie-auscafe, echo=F}
 autoplot(auscafe, main = 'Gasto em cafés, restaurantes e comidas para levar na Austrália', 
                   ylab = '$ bilhões', 
                   xlab = 'Tempo')
+```
+
+## Estabilização da variância
+
+Observamos que a variância está aumentando, então é necessário estabilizá-la.
+Vamos utilizar a função `BoxCox`, que calcula automaticamente o parâmetro ótimo `lambda`.
+Vejamos o resultado:
+
+```{r, echo=F}
+lambda <- BoxCox.lambda(auscafe)
+bc_auscafe <- BoxCox(auscafe, lambda)
+autoplot(bc_auscafe, main = 'Gasto em cafés, restaurantes e comidas para levar na Austrália (var. estabilizada)',
+         ylab = '$ bilhões',
+         xlab = 'Tempo') + 
+annotate("text", x=1985, y=1.3, label= paste('lambda = ', round(lambda, digits = 3)))
+```
+
+## Estacionariedade e diferenciação
+
+Verifiquemos agora estacionariedade e necessidade de diferenciação.
+Inicialmente, utilizamos o teste ADF para a verificação da estacionariedade:
+
+```{r, echo = F}
+adf.test(bc_auscafe)
+```
+
+Não rejeitamos a hipótese de não estacionariedade, logo decidimos por uma diferenciação. Diferenciando e testando:
+
+```{r, echo = F}
+d_bc_auscafe = diff(bc_auscafe, 1)
+adf.test(d_bc_auscafe)
+```
+
+Agora, sim, temos um modelo estacionário.
+Como estamos trabalhando com modelos SARIMA, verificamos também a necessidade de uma diferenciação
+sazonal. Verificamos isso com os gráficos da ACF e da PACF:
+
+```{r, echo=F}
+par(mfrow = c(1,2))
+acf(d_bc_auscafe)
+pacf(d_bc_auscafe)
+```
+
+A presença de sazonalidade no lag 12 (e seus múltiplos e divisores) é clara,
+tanto nos gráficos da ACF e PACF, quanto no próprio gráfico da série. Decidimos portanto por realizar uma
+diferenciação sazonal de lag 12.
+
+```{r, echo = F}
+dd_bc_auscafe = diff(d_bc_auscafe, 12)
+adf.test(dd_bc_auscafe)
+```
+
+Ainda mantemos a estacionariedade!
+
+```{r, echo=F}
+par(mfrow = c(1,2))
+acf(dd_bc_auscafe)
+pacf(dd_bc_auscafe)
+```
+
+Os picos diminuíram de forma considerável.
+Os picos na ACF (1, 12 e 23) indicam um termo MA(1) (corte depois de $q > 1$) e um termo sazonal MA(1) (\textit{spike} em lag 12). Os termos autoregressivos estão mais difíceis de interpretar se baseando apenas nos gráficos da ACF e PACF.
+Vamos utilizar uma abordagem de ``gridsearch'' para tentar encontrar o modelo
+mais simples que minimiza os critérios de informação.
+
+## Critério de informação
+
+Vamos realizar um ``gridsearch'' entre 0 e 3 para os parâmetros $p$ e $P$
+(com exceção de alguns modelos específicos que tiveram problemas na otimização durante a estimação).
+
+```{r, echo = F}
+ARMA.res <- data.frame()
+K = 3
+for (p in 0:K) {
+  for (P in 0:K) {
+    if (!(p == 1 & P == 3) & !(p == 3 & P == 1)){
+      mod <- Arima(y = dd_bc_auscafe, order = c(p, 0, 1), seasonal = c(P, 0, 1))
+      ARMA.res <- rbind(ARMA.res, c(p, P, mod$aic, mod$bic, mod$aicc))
+    }
+  }
+}
+names(ARMA.res) = c('p', 'P','AIC', 'BIC', 'AICc')
+```
+
+
+```{r, echo = F, message=F}
+library(knitr)
+kable(ARMA.res)
+```
+
+Verificamos que minimizamos AIC e AICc com $p = 2$, $P = 3$, enquanto minimizamos o BIC com $p = P = 0$.
+Vamos trabalhar ambos os modelos.
+
+## Estimação
+
+Vamos utilizar a função `Arima` para ajustar os modelos SARIMA(2, 1, 1)(3, 1, 1)[12] e SARIMA(0, 1, 1)(0, 1, 1)[12], com transformação de Box-Cox (automática).
+
+```{r, echo=F}
+mod1 <- Arima(auscafe, order = c(2, 1, 1), seasonal = c(3, 1, 1), lambda = "auto")
+summary(mod1)
+```
+
+```{r, echo=F}
+mod2 <- Arima(auscafe, order = c(0, 1, 1), seasonal = c(0, 1, 1), lambda = "auto")
+summary(mod2)
+```
+
+Vale notar que, por mais que estamos deixando a função escolher o parâmetro `lambda`, ele escolhe o mesmo que encontramos
+anteriormente. (Existe uma vantagem em deixar a função fazer isso: o modelo todo é estimado com uma função só,
+então fica trivial de utilizar funções de previsão que automaticamente calculam intervalos preditivos,
+por exemplo.)
+
+## Diagnóstico
+
+Precisamos verificar os resíduos das nossas estimações. Fazemos isso com a função `checkresiduals`, e também aplicamos
+um teste de Jarque-Bera (este tem hipótese nula de assimetria 0 e excesso de curtose 3).
+
+```{r, echo=F}
+checkresiduals(mod1)
+jarque.bera.test(mod1$residuals)
+```
+
+```{r, echo=F}
+checkresiduals(mod2)
+jarque.bera.test(mod2$residuals)
+```
+
+Vamos discutir os resultados obtidos. O modelo SARIMA(2, 1, 1)(3, 1, 1)[12] rejeita as observações serem i.i.d., porém rejeita também a normalidade. Observamos valores extremos nos resíduos, assim como spike em lag 13.
+O modelo SARIMA(0, 1, 1)(0, 1, 1)[12] rejeita as observações serem i.i.d., mas não rejeita a normalidade!
+Vemos que várias autocorrelações estão fora do intervalo de confiança.
+
+Com a posse de todas essas informações, acabamos por escolher o modelo SARIMA(0, 1, 1)(0, 1, 1)[12], que, mesmo que não seja
+perfeito, é um dos melhores no ajuste aos dados e também é o mais simples entre os dois.
+Observe ainda que este modelo é também escolhido pela função `auto.arima`:
+
+```{r, echo = F}
+auto.arima(auscafe)
 ```
 
