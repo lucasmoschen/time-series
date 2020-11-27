@@ -1,0 +1,9 @@
+---
+title: "Análise de intervenção e previsão de atividade econômica"
+author: 
+- Lucas Emanuel Resck Domingues^[Escola de Matemática Aplicada]
+- Lucas Machado Moschen^[Escola de Matemática Aplicada]
+output:
+  pdf_document: default
+---
+
