@@ -7,3 +7,38 @@ output:
   pdf_document: default
 ---
 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(forecast)
+library(TSA)
+library(tseries)
+```
+
+
+# Dados
+
+A série temporal é o total de vendas mensais nos negócios em milhões de dólares, obtido em [Fred, Federal Reserve Bank of St. Louis](https://fred.stlouisfed.org/series/TOTBUSSMNSA). A janela de observações será entre Janeiro de 2002 a Dezembro de 2014, em que os últimos dois anos são utilizados para a validação do modelo de previsão. 
+
+```{r, echo=F}
+tbs <- read.csv("data/TOTBUSSMNSA.csv")
+tbs <- ts(tbs$TOTBUSSMNSA, start = c(1992, 1), end = c(2020, 9), frequency = 12)
+tbs <- window(tbs, start = c(2002, 1), end = c(2014, 12))
+
+autoplot(tbs, main = "Total de vendas nos negócios", 
+              xlab = "Tempo", 
+              ylab = "Milhões de dólares") + 
+  geom_vline(xintercept = (2008 + 7/12), 
+             color = 'red', 
+             linetype = "dashed", 
+             size = 1) + 
+  annotate(geom="text", x=2008, y=750000, label="Crise",
+              color="red")
+```
+
+Vamos separar os últimos dois anos para validação do modelo e portanto, não usaremos no treinamento do modelo. 
+
+```{r, echo=FALSE}
+tbs_train <- window(tbs, start = c(2002, 1), end = c(2012,12))
+tbs_test <- window(tbs, start = c(2013,1), end = c(2014,12))
+```
+
