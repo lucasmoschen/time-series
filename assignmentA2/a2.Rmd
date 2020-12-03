@@ -14,6 +14,22 @@ library(TSA)
 library(tseries)
 ```
 
+# TODO
+
+1. Fazer o processo de identificação manualmente para obter a primeira opção de modelo (mostrar que aprendemos isso).
+
+2. Usar auto.arima para um segundo modelo. Se eles forem diferentes (o drift faz variar), comparamos os modelos usando alguma coisa (pensei no rollapply). Escolher o "melhor modelo"
+
+3. Fazer previsões do modelo e comparar com pósintervenção. Vamos comparar com a realidade e verificar que de fato houve efeito. 
+
+4. Fitar o modelo em todo o modelo: propor um modelo para a crise (talvez dois e repetir a escolha do melhor?)
+
+5. Fazemos as previsões e avaliamos o modelo no teste (podemos comparar com um naive). 
+
+Obs.: Esses 5 passos combrem a Metodologia, mas podemos adicionar algumas cerejas para deixar mais rico, dependendo do tempo. 
+
+
+
 
 # Dados
 
@@ -41,4 +57,52 @@ Vamos separar os últimos dois anos para validação do modelo e portanto, não 
 tbs_train <- window(tbs, start = c(2002, 1), end = c(2012,12))
 tbs_test <- window(tbs, start = c(2013,1), end = c(2014,12))
 ```
+
+Vamos considerar que houve uma intervenção (a crise sub-prime) em julho de 2008. 
+
+# 1. Modelagem pré-intervenção 
+
+Antes vamos fazer a modelagem do processo antes da crise. Assim, poderemos verificar que de fato houve efeito pós intervenção. 
+
+```{r, echo=F}
+pre_intervention <- window(tbs_train, start = c(2002,1), end = c(2008,6))
+pos_intervention <- window(tbs_train, start = c(2008,7), end = c(2012,12))
+```
+
+Para isso, vamos seguir a metodologia Box-Jenkins. Primeiro, faremos uma transformação Box-Cox na série, se utilizando do $\lambda$ que minimiza o coeficiente de variação para subséries da série. 
+
+```{r, echo=F}
+lambda <- BoxCox.lambda(pre_intervetion)
+pre_intervention.bc <- BoxCox(pre_intervention, lambda)
+print(paste("Obtemos lambda = ", lambda))
+```
+
+Agora, vamos remover a tendência diferenciando a série. 
+
+```{r, echo=F}
+pre_intervention.d = diff(pre_intervention.bc)
+autoplot(pre_intervention.d, main = "Diferença mensal de vendas nos negócios", 
+              xlab = "Tempo", 
+              ylab = "Milhões de dólares")
+```
+
+Com a série diferenciada, vamos checar a sazonalidade anual, como sugerido: 
+
+```{r, echo=F}
+kruskal.test(pre_intervention.d,g = cycle(pre_intervention.d))
+```
+
+Como o p-valor é pequeno, temos evidência para rejeitar a hipótese nula do teste, o que nos dá suporte para diferenciar a série sazonalmente. Após a diferenciação, podemos ver que a ACF e a PACF não apresentam picos nos lags múltiplos de 12. 
+
+```{r, echo=F}
+pre_intervention.ds <- diff(pre_intervention.d, 12)
+ggtsdisplay(pre_intervention.ds)
+```
+
+Assim, podemos partir para identificar o modelo. 
+
+```{r, echo=F}
+adf.test(pre_intervention.bc)
+```
+
 
