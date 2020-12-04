@@ -72,7 +72,7 @@ pos_intervention <- window(tbs_train, start = c(2008,7), end = c(2012,12))
 Para isso, vamos seguir a metodologia Box-Jenkins. Primeiro, faremos uma transformação Box-Cox na série, se utilizando do $\lambda$ que minimiza o coeficiente de variação para subséries da série. 
 
 ```{r, echo=F}
-lambda <- BoxCox.lambda(pre_intervetion)
+lambda <- BoxCox.lambda(pre_intervention)
 pre_intervention.bc <- BoxCox(pre_intervention, lambda)
 print(paste("Obtemos lambda = ", lambda))
 ```
@@ -99,10 +99,69 @@ pre_intervention.ds <- diff(pre_intervention.d, 12)
 ggtsdisplay(pre_intervention.ds)
 ```
 
-Assim, podemos partir para identificar o modelo. 
+Assim, com o teste ADF rejeirando a não estacionaridade, podemos partir para identificar o modelo. 
 
 ```{r, echo=F}
 adf.test(pre_intervention.bc)
 ```
 
+Vemos uma ACF decaindo exponencialmente e uma PACF morrendo após o lag 2. Assim imaginamos um modelo AR com grau não maior do que 3. Vamos testar essa ideia com os critérios de informação. Além disso, não percebemos nenhum LAG significativo sazonal, o que pode indicar um MA(1) ou não ter componentes autorregressivos ou de média móvel sazonais. Vamos testar esses modelos também com os critérios de informação. O modelo de teste ARIMA(3,1,3) teve problema de estacionariedade e foi retirado da análise. 
+
+```{r, echo = F}
+ARMA.res <- data.frame()
+## valor máximo de p,q.
+K <- 3
+L <- 2
+for (p in 0:K) {
+    for (q in 0:L) {
+        model1 <- Arima(y = pre_intervention.bc, order = c(p, 1, q), seasonal = c(0,1,0))
+        model2 <- Arima(y = pre_intervention.bc, order = c(p, 1, q), seasonal = c(0,1,1))
+        ARMA.res <- rbind(ARMA.res, c(p,q,model1$aic, model1$bic, model1$aicc,
+                                          model2$aic, model2$bic, model2$aicc))
+    }
+}
+names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICc', 'AIC (S)', 'BIC (S)', 'AICc (S)')
+```
+
+Podemos observar que sem sazonalidade, o melhor modelo segundo os três critérios de informação foi ARMA(2,0) como já tínhamos imaginado. Considerando a sazonalidade, o melhor modelo fica, ao todo 
+
+ARIMA(2,1,0)(0,1,1)[12]
+
+```{r}
+print(ARMA.res)
+```
+
+Agora que já identificamos o modelo, podemos estimá-lo. 
+
+```{r, echo=FALSE}
+model1 <- Arima(pre_intervention, 
+                order = c(2,1,0), 
+                seasonal = c(0,1,1),
+                lambda = "auto")
+summary(model1)
+```
+
+Agora com o modelo treinado, podemos fazer uma checagem sobre os resíduos: 
+
+```{r}
+checkresiduals(model1)
+jarque.bera.test(model1$residuals)
+```
+
+Observamos que existe um resíduo bem deslocado que no ano de 2003 quando houve uma queda que o modelo não conseguiu capturar. Além disso, não aparenta uma normalidade, inclusive tendo-a rejeitada pelo teste Jarque-Bera. Por fim, as correlações estão bem interessantes, dentro das margens e, o teste de Ljung-Box não rejeitou a hipótese de descorrelação. Isso é um bom indício, porém a não normalidade dos dados indica algum problema.  
+
+Vamos averiguar uma segunda opção de modelo que pode ser encontrada automaticamente, utilizando a função `auto.arima`. Assim, vemos que o modelo estimado tem drift e é do tipo 
+
+ARIMA(3,0,0)(2,1,0)[12]. 
+
+```{r, echo=FALSE}
+model2 <- auto.arima(pre_intervention, 
+           lambda = "auto")
+model2 <- Arima(pre_intervention, 
+                order = c(3,0,0), 
+                seasonal = c(2,1,0), 
+                include.drift = TRUE, 
+                lambda = "auto")
+summary(model2)
+```
 
