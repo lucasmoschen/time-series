@@ -209,3 +209,47 @@ Temos resíduos com uma cara de normalidade e a ACF dentro das faixas de confian
 Desta forma, fica claro que o modelo 4 é o mais indicado para representar a série antes da intervenção. 
 
 # Previsões do modelo e comparação pós intervenção 
+
+```{r, echo=FALSE}
+autoplot(tbs, main = "Total de vendas nos negócios", 
+              xlab = "Tempo", 
+              ylab = "Milhões de dólares") + 
+  geom_vline(xintercept = (2008 + 7/12), 
+             color = 'red', 
+             linetype = "dashed", 
+             size = 1) + 
+  annotate(geom="text", x=2008, y=750000, label="Crise",
+              color="red")
+```
+
+
+Observamos graficamente que as previsões de nosso modelo ficam em um patamar mais alto do que os dados reais e por isso tomamos como hipótese de que a crise foi significante. Consideramos os procedimentos sugeridos por Box e Tiao (1976) com a checagem do erro de previsão. 
+
+Seja a estatística 
+$$
+Q = \sum_{j=1}^m a_j^2/\hat{\sigma}_a^2
+$$
+onde $a_j = Z_j - \hat{Z}_{j-1}(1), j = 1, ..., m$. Sabemos que $Q$ seque uma distribuição $\chi^2(m)$ quando $m$ é grande. 
+
+```{r, echo=F}
+n = length(pre_intervention)
+m = length(pos_intervention)
+a <- rep(0, m)
+for (j in 1:m) {
+  month <- (j-1) %% 12 + ((j-1) %% 12 == 0)*12
+  year <- 2012 + ceiling((j-1)/12)
+  end <- c(year, month)
+  w <- window(tbs_train, start = c(2002,1), end = end)
+  model <- Arima(w, order = c(2,1,0), 
+                 seasonal = c(0,1,1),
+                 lambda = 0)
+  z_hat_j <- forecast(model, h = 1)$mean
+  a[j] <- pos_intervention[j] - z_hat_j
+  if(j==1){
+    sigma2 <- model$sigma2
+  }
+}
+Q <- sum(a^2)/sigma2
+print(paste("Q = ", Q))
+```
+
