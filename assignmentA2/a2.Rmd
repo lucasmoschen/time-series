@@ -20,7 +20,7 @@ library(tseries)
 
 (DONE) 2. Usar auto.arima para um segundo modelo. Se eles forem diferentes (o drift faz variar), comparamos os modelos usando checkresiduals. Escolher o "melhor modelo"
 
-3. Fazer previsões do modelo e comparar com pósintervenção. Vamos comparar com a realidade e verificar que de fato houve efeito. 
+(DONE) 3. Fazer previsões do modelo e comparar com pósintervenção. Vamos comparar com a realidade e verificar que de fato houve efeito. 
 
 4. Fitar o modelo em todo o modelo: propor um modelo para a crise (talvez dois e repetir a escolha do melhor?)
 
@@ -236,10 +236,7 @@ n = length(pre_intervention)
 m = length(pos_intervention)
 a <- rep(0, m)
 for (j in 1:m) {
-  month <- (j-1) %% 12 + ((j-1) %% 12 == 0)*12
-  year <- 2012 + ceiling((j-1)/12)
-  end <- c(year, month)
-  w <- window(tbs_train, start = c(2002,1), end = end)
+  w <- ts(tbs_train[1:(n+j-1)], start = c(2002,1), frequency = 12)
   model <- Arima(w, order = c(2,1,0), 
                  seasonal = c(0,1,1),
                  lambda = 0)
@@ -253,3 +250,18 @@ Q <- sum(a^2)/sigma2
 print(paste("Q = ", Q))
 ```
 
+Temos que o valor de $Q$ é suficientemente alto para que vejamos que de fato há efeito da crise sub-prime. 
+
+Podemos, então, partir para a modelagem da intervenção. 
+
+# Modelagem com intervenção 
+
+Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Suporemos que não hajam outras intervenções, como governamental, e elas devem ser incorporadas no modelo. Seja ele:
+
+$$
+u_t = \begin{cases}
+0, t < \text{julho 2018} \\
+\delta^k \omega_0, t = \text{julho 2008} + k, k = 0, 1, 2, ...
+\end{cases}
+$$
+Estimaremos em toda série esses parâmetros também. 
