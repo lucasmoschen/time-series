@@ -9,6 +9,7 @@ output:
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
+library(ggfortify)
 library(forecast)
 library(TSA)
 library(tseries)
@@ -286,7 +287,11 @@ ggtsdisplay(mod.arimax$residuals)
 
 A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
 
-```{r}
-autoplot(cbind(fitted(mod.arimax), tbs_train.bc)) 
+```{r, warning = F}
+autoplot(mod.arimax,
+         ts.geom = "point", 
+         fitted.colour = "blue", 
+         main = "Comparaçao dos dados reais com o modelo") + 
+  ylab('Valores log') + xlab('Tempo') 
 ```
 
