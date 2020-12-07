@@ -22,7 +22,7 @@ library(tseries)
 
 (DONE) 3. Fazer previsões do modelo e comparar com pósintervenção. Vamos comparar com a realidade e verificar que de fato houve efeito. 
 
-4. Fitar o modelo em todo o modelo: propor um modelo para a crise (talvez dois e repetir a escolha do melhor?)
+4. Fitar o modelo em todos os dados: propor um modelo para a crise (talvez dois e repetir a escolha do melhor?)
 
 5. Fazemos as previsões e avaliamos o modelo no teste (podemos comparar com um naive). 
 
@@ -214,6 +214,7 @@ Desta forma, fica claro que o modelo 4 é o mais indicado para representar a sé
 autoplot(tbs, main = "Total de vendas nos negócios", 
               xlab = "Tempo", 
               ylab = "Milhões de dólares") + 
+  autolayer(forecast(model4, h = 78)) + 
   geom_vline(xintercept = (2008 + 7/12), 
              color = 'red', 
              linetype = "dashed", 
@@ -264,4 +265,28 @@ u_t = \begin{cases}
 \delta^k \omega_0, t = \text{julho 2008} + k, k = 0, 1, 2, ...
 \end{cases}
 $$
-Estimaremos em toda série esses parâmetros também. 
+Estimaremos em toda série esses parâmetros também ($\delta$ e $\omega_0$). 
+
+```{r, echo=F}
+tbs_train.bc <- BoxCox(tbs_train, lambda = 0)
+mod.arimax <- arimax(tbs_train.bc, 
+                     order = c(2, 1, 0),
+                     seasonal = c(0, 1, 1),
+                     xtransf=data.frame(Crise=1*(seq(tbs_train)==(length(pre_intervention) + 1))),
+                     transfer=list(c(1, 1)),
+                     method = "ML") # problemas com CSS-ML e CSS, porquê? 
+summary(mod.arimax)
+```
+
+Vamos ver como se comportam os resíduos do modelo. 
+
+```{r, echo=F, warning=F}
+ggtsdisplay(mod.arimax$residuals)
+```
+
+A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
+
+```{r}
+autoplot(cbind(fitted(mod.arimax), tbs_train.bc)) 
+```
+
