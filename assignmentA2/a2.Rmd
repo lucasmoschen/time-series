@@ -236,13 +236,17 @@ Desta forma, fica claro que o modelo 4 é o mais indicado para representar a sé
 Podemos averiguar a comparação de três m´etricas para os erros: 
 
 ```{r, echo = F}
-par(mfrow = c(1,3))
-barplot(model.errors[,2], beside = T, main = "MAPE")
-barplot(model.errors[,3], beside = T, main = "MAE")
-barplot(model.errors[,4], beside = T, main = "RMSE")
+p1 <- ggplot(model.errors, aes(x=Modelo, y=MAPE)) + 
+  geom_bar(stat = "identity")
+p2 <- ggplot(model.errors, aes(x=Modelo, y=RMSE)) + 
+  geom_bar(stat = "identity")
+p3 <- ggplot(model.errors, aes(x=Modelo, y=MAE)) + 
+  geom_bar(stat = "identity")
+
+gridExtra::grid.arrange(p1,p2,p3, nrow = 1, top = 'Métricas de Erro')
 ```
 
-Assim, além de os terceiro e quartos modelo terem os menores erros o quarto erro vence em duas das métricas e, portanto, faz sentido em ser utilizado. 
+Assim, além de os terceiro e quartos modelo terem os menores erros o quarto erro vence em duas das métricas e, portanto, faz sentido em ser utilizado (em adição aos resíduos terem um comportamento levemente melhor).
 
 # Previsões do modelo e comparação pós intervenção 
 
