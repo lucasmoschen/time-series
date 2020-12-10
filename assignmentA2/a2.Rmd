@@ -403,9 +403,9 @@ mod2.arimax <- arimax(tbs_train.bc,
                      order = c(2, 1, 0),
                      seasonal = c(0, 1, 1),
                      xtransf=data.frame(Crise=1*
-                                       (seq(tbs_train) >= length(pre_intervention) + 1 &
+                                       ((seq(tbs_train) >= length(pre_intervention) + 1) &
                                         seq(tbs_train) <= length(pre_intervention) + 1 + 6)),
-                     transfer=list(c(1, 1)),
+                     transfer=list(c(1, 0)),
                      method = "ML")
 summary(mod2.arimax)
 ```
@@ -439,13 +439,14 @@ ggplot(tbs_train.bc_df, aes(x,y)) +
 O gráfico abaixo nos permite visualizar a predição do modelo até até 24 passos à frente.
 
 ```{r, echo = F}
+k <- 6 # size of the effect 
 delta <- as.numeric(mod2.arimax$coef['Crise-AR1'])
 omega_0 <- as.numeric(mod2.arimax$coef['Crise-MA0'])
 tf <- rep(0, (n + m + K))
 for (i in 1:(m+K)){
-  tf[i+n] <- delta^(i-1)
+  tf[i+n] <- delta^(i-1) + tf[(i+n-1)] - tf[(i+n-k-1)]
 }
-tf <- omega_0*cumsum(tf)
+tf <- omega_0*tf
 mod2.arima <- Arima(tbs_train, 
                     order = c(2,1,0), 
                     seasonal = c(0,1,1),
