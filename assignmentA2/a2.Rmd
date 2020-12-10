@@ -29,9 +29,6 @@ library(Metrics)
 
 Obs.: Esses 5 passos combrem a Metodologia, mas podemos adicionar algumas cerejas para deixar mais rico, dependendo do tempo. 
 
-
-
-
 # Dados
 
 A série temporal a seguir é o total de vendas mensais nos negócios em milhões de dólares, obtido em [Fred, Federal Reserve Bank of St. Louis](https://fred.stlouisfed.org/series/TOTBUSSMNSA). A janela de observações está entre Janeiro de 2002 e Dezembro de 2014. Os últimos dois anos serão utilizados para a validação do modelo de previsão. 
@@ -126,7 +123,7 @@ for (p in 0:K) {
 names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICc', 'AIC (S)', 'BIC (S)', 'AICc (S)')
 ```
 
-A tabela mostra vários critérios de informação para os modelos $\text{ARMA}(p, q)[12]$ e $\text{ARMA}(p, q)[12]$ com média movel sazonal (S).
+A tabela mostra vários critérios de informação para os modelos $\text{ARMA}(p, q)[12]$ e $\text{ARMA}(p, q)[12]$ com uma média movel sazonal (S).
 
 Podemos observar que, sem componente MA sazonalidade, o melhor modelo segundo os três critérios de informação foi ARMA(2,0), algo esperado dadas as nossas considerações anteriormente. Considerando MA sazonal, o melhor modelo fica, entre todos, ARIMA(2,1,0)(0,1,1)[12].
 
@@ -265,9 +262,9 @@ autoplot(tbs, main = "Total de vendas nos negócios",
               color="red")
 ```
 
-Observamos que as previsões de nosso modelo ficam em um patamar mais alto do que os dados reais e por isso tomamos como hipótese de que a crise foi significante. Consideramos os procedimentos sugeridos por Box e Tiao (1976) com a checagem do erro de previsão. 
+Observamos que as previsões de nosso modelo ficam em um patamar mais alto do que os dados reais e por isso tomamos como hipótese nula de que a crise não foi significante. Consideramos os procedimentos sugeridos por Box e Tiao (1976) com a checagem do erro de previsão. 
 
-Considere a estatística $$Q = \sum_{j=1}^m a_j^2/\hat{\sigma}_a^2$$ onde $a_j = Z_j - \hat{Z}_{j-1}(1), j = 1, ..., m$. Sabemos que $Q$ seque uma distribuição $\chi^2(m)$ quando $m$ é grande. 
+Considere a estatística $$Q = \sum_{j=1}^m a_j^2/\hat{\sigma}_a^2$$ onde $a_j = Z_j - \hat{Z}_{j-1}(1), j = 1, ..., m$. Sabemos que $Q$ seque uma distribuição $\chi^2(m)$ quando $m$ é grande. Portanto rejeitamos a hipótese nula com nível de significância $\alpha_0$ se $Q > F^{-1}(1 - \alpha_0)$, onde $F$ é a distribuição acumulada de uma chi-quadrado com $m$ graus de liberdade. Ao observar $Q = q$, o p-valor será dado por $\alpha_0 = 1 - F(q)$. 
 
 ```{r, echo=F}
 n = length(pre_intervention)
@@ -285,10 +282,11 @@ for (j in 1:m) {
   }
 }
 Q <- sum(a^2)/sigma2
-print(paste("Q = ", Q))
+p_valor <- 1 - pchisq(q = Q, df = m)
+print(paste("p-valor = ", p_valor, ", Estatística Q = ", Q))
 ```
 
-Temos que o valor de $Q$ é suficientemente alto para que vejamos que de fato há efeito da crise sub-prime. Podemos, então, partir para a modelagem da intervenção. 
+Como o p-valor é pequeno, em particular $< 0.05$, rejeitamos a hipótese nula, o que nos dá evidência para confirmar o efeito da crise subprime. Podemos, então, partir para a modelagem da intervenção. 
 
 # Modelagem com intervenção 
 
@@ -311,26 +309,28 @@ mod.arimax <- arimax(tbs_train.bc,
                      order = c(2, 1, 0),
                      seasonal = c(0, 1, 1),
                      xtransf=data.frame(Crise=1*(seq(tbs_train)==(length(pre_intervention) + 1))),
-                     transfer=list(c(1, 1)),
-                     method = "ML") # problemas com CSS-ML e CSS, porquê?
+                     transfer=list(c(1, 0)),
+                     method = "ML")
 summary(mod.arimax)
 ```
 
 Vamos ver como se comportam os resíduos do modelo. 
 
 ```{r, echo=F, warning=F}
-par(mfrow = c(2,1))
 ggtsdisplay(mod.arimax$residuals)
 ```
 
 O resíduo não parece ser resultado de uma normal, pois justamente na intervenção há uma distorção bem grande. A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
 
 ```{r, echo = F, warning = F, message=F}
-library(ggfortify)
-autoplot(mod.arimax,
-         ts.geom = "point", 
-         fitted.colour = "blue", 
-         main = "Comparação dos dados reais com o modelo") + 
+x <- time(tbs_train.bc)
+tbs_train.bc_df <- data.frame(x = x, y = tbs_train.bc)
+fitted_model <- fitted(mod.arimax)
+
+ggplot(tbs_train.bc_df, aes(x,y)) + 
+  geom_point() +
+  geom_line(aes(x, fitted_model), colour = 'blue') + 
+  ggtitle("Comparação dos dados reais com o modelo") + 
   ylab('Valores log') + xlab('Tempo') 
 ```
 
@@ -338,25 +338,23 @@ Em geral o modelo parece capturar bem a intervenção.
 
 # Previsão com o modelo de intervenção
 
-Vamos agora realizar a previsão até 24 passos à frente.
+Vamos agora realizar a previsão até 24 passos à frente. Para isso precisamos usar as estimativas de $\delta$ e $\omega_0$ dados pelo arimax e calculamos $h_t$. Esses valores são usados como regressores da função `Arima`, a qual podemos fazemos fazer predições. 
 
 ```{r, echo = F}
-
-# https://stats.stackexchange.com/q/169564
-
-delta = as.numeric(mod.arimax$coef['Crise-AR1'])
-omega_0 = as.numeric(mod.arimax$coef['Crise-MA1'])
-tf = rep(0, length(pre_intervention))
-for (i in 1:length(pos_intervention)) {
-  tf = c(tf, delta^(i-1)*omega_0)
+delta <- as.numeric(mod.arimax$coef['Crise-AR1'])
+omega_0 <- as.numeric(mod.arimax$coef['Crise-MA0'])
+tf <- rep(0, (n + m))
+for (i in 1:m) {
+  tf[i+n] <- delta^(i-1)*omega_0
 }
-tf = tf*as.numeric(mod.arimax$coef['Crise-MA0'])
 mod.arima = Arima(tbs_train, 
                 order = c(2,1,0), 
                 seasonal = c(0,1,1),
                 lambda = 0,
                 xreg = tf)
+```
 
+```{r}
 autoplot(forecast(mod.arima, h=24, xreg = rep(0, 24)),
          level = c(90, 95),
          main = "Total de vendas nos negócios",
@@ -364,7 +362,7 @@ autoplot(forecast(mod.arima, h=24, xreg = rep(0, 24)),
          ylab = "Milhões de dólares")
 ```
 
-Vamos verificar o MAPE da nossa previsão:
+Vamos verificar o MAPE da nossa previsão, comparando com os dados reais de teste:
 
 ```{r, echo = F}
 mape(tbs_test, forecast(mod.arima, h=24, xreg = rep(0, 24))$mean)
