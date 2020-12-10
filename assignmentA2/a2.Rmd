@@ -484,7 +484,8 @@ mod3.arima <- Arima(tbs_train,
                     order = c(2,1,0), 
                     seasonal = c(0,1,1),
                     lambda = 0,
-                    xreg = tf[1:(n+m)])
+                    xreg = tf[1:(n+m)]
+                    )
 ```
 
 ```{r, echo=F}
