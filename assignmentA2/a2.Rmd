@@ -34,7 +34,7 @@ Obs.: Esses 5 passos combrem a Metodologia, mas podemos adicionar algumas cereja
 
 # Dados
 
-A série temporal é o total de vendas mensais nos negócios em milhões de dólares, obtido em [Fred, Federal Reserve Bank of St. Louis](https://fred.stlouisfed.org/series/TOTBUSSMNSA). A janela de observações será entre Janeiro de 2002 a Dezembro de 2014, em que os últimos dois anos são utilizados para a validação do modelo de previsão. 
+A série temporal a seguir é o total de vendas mensais nos negócios em milhões de dólares, obtido em [Fred, Federal Reserve Bank of St. Louis](https://fred.stlouisfed.org/series/TOTBUSSMNSA). A janela de observações está entre Janeiro de 2002 e Dezembro de 2014. Os últimos dois anos serão utilizados para a validação do modelo de previsão. 
 
 ```{r, echo=F}
 tbs <- read.csv("data/TOTBUSSMNSA.csv")
@@ -59,11 +59,11 @@ tbs_train <- window(tbs, start = c(2002, 1), end = c(2012,12))
 tbs_test <- window(tbs, start = c(2013,1), end = c(2014,12))
 ```
 
-Vamos considerar que houve uma intervenção (a crise sub-prime) em julho de 2008. 
+Vamos considerar que houve uma intervenção (a crise do subprime) em julho de 2008. 
 
 # 1. Modelagem pré-intervenção 
 
-Antes vamos fazer a modelagem do processo antes da crise. Assim, poderemos verificar que de fato houve efeito pós intervenção. 
+Vamos realizar uma modelagem pré-intervenção, isso é, vamos fazer a modelagem do processo antes da crise. Assim, poderemos verificar que de fato houve efeito pós intervenção.
 
 ```{r, echo=F}
 pre_intervention <- window(tbs_train, start = c(2002,1), end = c(2008,6))
@@ -72,7 +72,7 @@ pos_intervention <- window(tbs_train, start = c(2008,7), end = c(2012,12))
 
 ## 1. Modelagem manual Box-Jenkins 
 
-Para isso, vamos seguir a metodologia Box-Jenkins. Primeiro, faremos uma transformação Box-Cox na série, se utilizando do $\lambda$ que minimiza o coeficiente de variação para subséries da série. 
+Vamos seguir a metodologia Box-Jenkins. Primeiro, faremos uma transformação Box-Cox na série, se utilizando do $\lambda$ que minimiza o coeficiente de variação para subséries da série. 
 
 ```{r, echo=F}
 lambda <- BoxCox.lambda(pre_intervention)
@@ -92,23 +92,23 @@ autoplot(pre_intervention.d, main = "Diferença mensal de vendas nos negócios",
 Com a série diferenciada, vamos checar a sazonalidade anual, como sugerido: 
 
 ```{r, echo=F}
-kruskal.test(pre_intervention.d,g = cycle(pre_intervention.d))
+kruskal.test(pre_intervention.d, g = cycle(pre_intervention.d))
 ```
 
-Como o p-valor é pequeno, temos evidência para rejeitar a hipótese nula do teste, o que nos dá suporte para diferenciar a série sazonalmente. Após a diferenciação, podemos ver que a ACF e a PACF não apresentam picos nos lags múltiplos de 12. 
+O p-valor é pequeno, então rejeitamos a hipótese nula do teste, o que nos dá suporte para diferenciar a série sazonalmente. Após a diferenciação, podemos ver que a ACF e a PACF não apresentam picos nos lags múltiplos de 12. 
 
 ```{r, echo=F}
 pre_intervention.ds <- diff(pre_intervention.d, 12)
 ggtsdisplay(pre_intervention.ds)
 ```
 
-Assim, com o teste ADF rejeirando a não estacionaridade, podemos partir para identificar o modelo. 
+Assim, com o teste ADF rejeitando a não estacionaridade, podemos partir para a identificação do modelo. 
 
 ```{r, echo=F}
 adf.test(pre_intervention.bc)
 ```
 
-Vemos uma ACF decaindo exponencialmente e uma PACF morrendo após o lag 2. Assim imaginamos um modelo AR com grau não maior do que 3. Vamos testar essa ideia com os critérios de informação. Além disso, não percebemos nenhum LAG significativo sazonal, o que pode indicar um MA(1) ou não ter componentes autorregressivos ou de média móvel sazonais. Vamos testar esses modelos também com os critérios de informação. O modelo de teste ARIMA(3,1,3) teve problema de estacionariedade e foi retirado da análise. 
+Vemos uma ACF decaindo exponencialmente (em senóides amortecidas) e uma PACF morrendo após o lag 2. Assim imaginamos um modelo AR com grau não maior do que 3. Vamos testar essa ideia com os critérios de informação. Além disso, não percebemos nenhum LAG significativo sazonal, o que pode indicar um MA(1) ou não ter componentes autorregressivos ou de média móvel sazonais. Vamos testar esses modelos também com os critérios de informação. O modelo de teste ARIMA(3,1,3) teve problema de estacionariedade e foi retirado da análise. 
 
 ```{r, echo = F}
 ARMA.res <- data.frame()
@@ -126,9 +126,9 @@ for (p in 0:K) {
 names(ARMA.res) = c('p', 'q','AIC', 'BIC', 'AICc', 'AIC (S)', 'BIC (S)', 'AICc (S)')
 ```
 
-Podemos observar que sem sazonalidade, o melhor modelo segundo os três critérios de informação foi ARMA(2,0) como já tínhamos imaginado. Considerando a sazonalidade, o melhor modelo fica, ao todo 
+A tabela mostra vários critérios de informação para os modelos $\text{ARMA}(p, q)[12]$ e $\text{ARMA}(p, q)[12]$ com média movel sazonal (S).
 
-ARIMA(2,1,0)(0,1,1)[12]
+Podemos observar que, sem componente MA sazonalidade, o melhor modelo segundo os três critérios de informação foi ARMA(2,0), algo esperado dadas as nossas considerações anteriormente. Considerando MA sazonal, o melhor modelo fica, entre todos, ARIMA(2,1,0)(0,1,1)[12].
 
 ```{r, echo=F}
 print(ARMA.res)
@@ -166,7 +166,7 @@ checkresiduals(model1)
 jarque.bera.test(model1$residuals)
 ```
 
-Observamos que existe um resíduo bem deslocado que no ano de 2003 quando houve uma queda que o modelo não conseguiu capturar. Além disso, não aparenta uma normalidade, inclusive tendo-a rejeitada pelo teste Jarque-Bera. Por fim, as correlações estão bem interessantes, dentro das margens e, o teste de Ljung-Box não rejeitou a hipótese de descorrelação. Isso é um bom indício, porém a não normalidade dos dados indica algum problema.  
+Observamos que existe um resíduo bem deslocado que no ano de 2003 quando houve uma queda que o modelo não conseguiu capturar. Além disso, o resíduo não aparenta normalidade; inclusive, a curtose e o \textit{skewness} da normal foram rejeitados pelo teste Jarque-Bera. Por fim, as correlações estão bem interessantes, dentro das margens e, o teste de Ljung-Box não rejeitou a hipótese de descorrelação. Isso é um bom indício, porém a não normalidade dos dados indica algum problema.  
 
 ## 2. Modelo auto.arima 
 
@@ -188,9 +188,9 @@ checkresiduals(model2)
 jarque.bera.test(model2$residuals)
 ```
 
-Pela ACF, os erros certamente tem correlação, a princípio uma correlação autorregressiva, e também existe uma assimetria no histograma. Esses fatos são confirmados com os testes, dado que rejeitamos amabas as hipóteses nulas, isto é, temos evidência para assegurar que não há normalidade e existe correlação nos resíduos. As medidas dos erros de treinamento também não são melhores do que o modelo 1. 
+Pela ACF, os erros certamente tem correlação, a princípio uma correlação autorregressiva, e também existe uma assimetria no histograma. Esses fatos são confirmados com os testes, dado que rejeitamos ambas as hipóteses nulas, isto é, temos evidência para assegurar que não há normalidade e existe correlação nos resíduos. As medidas dos erros de treinamento também não são melhores do que o modelo 1. 
 
-## 3. Modelo auto.arima com variação 
+## 3. Modelo auto.arima adaptado manualmente 
 
 Fazendo algumas experimentações com o `auto.arima` podemos chegar num fato interessante colocando $\lambda = 0$.
 
@@ -203,7 +203,7 @@ model.errors <- rbind(model.errors,
                       error.metrics(pre_intervention, model3$fitted, 3))
 ```
 
-Conseguimos um modelo com todas as medidas de erro menores e, além disso 
+Conseguimos um modelo com todas as medidas de erro menores e, além disso:
 
 ```{r, echo=F}
 checkresiduals(model3)
@@ -229,11 +229,11 @@ model.errors <- rbind(model.errors,
                       error.metrics(pre_intervention, model4$fitted, 4))
 ```
 
-Temos resíduos com uma cara de normalidade e a ACF dentro das faixas de confiança, indicando um processo descorrelacionado. Tanto Jarque Bera quando Ljung Box não rejeitam suas hipóreses nulas, o que nos dá evidência para confirmar que os resíduos formam algo similar a um ruído branco. Os erros de treino também aparentam estar bem em relação ao modelo inicial. 
+Temos resíduos mais parecidos com uma normal, se comparados aos casos anteriores, e a ACF esá dentro das faixas de confiança, indicando um processo descorrelacionado. Tanto Jarque Bera quando Ljung Box não rejeitam suas hipóteses nulas, o que nos dá evidência para confirmar que os resíduos formam algo similar a um ruído branco. Os erros de treino também aparentam estar bem em relação ao modelo inicial. 
 
 Desta forma, fica claro que o modelo 4 é o mais indicado para representar a série antes da intervenção. 
 
-Podemos averiguar a comparação de três m´etricas para os erros: 
+Podemos averiguar a comparação de três métricas para os erros: 
 
 ```{r, echo = F}
 p1 <- ggplot(model.errors, aes(x=Modelo, y=MAPE)) + 
@@ -246,15 +246,17 @@ p3 <- ggplot(model.errors, aes(x=Modelo, y=MAE)) +
 gridExtra::grid.arrange(p1,p2,p3, nrow = 1, top = 'Métricas de Erro')
 ```
 
-Assim, além de os terceiro e quartos modelo terem os menores erros o quarto erro vence em duas das métricas e, portanto, faz sentido em ser utilizado (em adição aos resíduos terem um comportamento levemente melhor).
+Assim, além de o terceiro e o quarto modelos terem os menores erros, o quarto modelo vence em duas das métricas e, portanto, faz sentido ser escolhido (em adição aos seus resíduos terem um comportamento levemente melhor, como vimos).
 
-# Previsões do modelo e comparação pós intervenção 
+# Previsões do modelo e comparação pós-intervenção
+
+Vejamos uma comparação entre o dado real e aquele previsto pelo modelo, ambos pós-crise.
 
 ```{r, echo=FALSE}
 autoplot(tbs, main = "Total de vendas nos negócios", 
               xlab = "Tempo", 
               ylab = "Milhões de dólares") + 
-  autolayer(forecast(model4, h = 78)) + 
+  autolayer(forecast(model4, h = 78)) +
   geom_vline(xintercept = (2008 + 7/12), 
              color = 'red', 
              linetype = "dashed", 
@@ -263,14 +265,9 @@ autoplot(tbs, main = "Total de vendas nos negócios",
               color="red")
 ```
 
+Observamos que as previsões de nosso modelo ficam em um patamar mais alto do que os dados reais e por isso tomamos como hipótese de que a crise foi significante. Consideramos os procedimentos sugeridos por Box e Tiao (1976) com a checagem do erro de previsão. 
 
-Observamos graficamente que as previsões de nosso modelo ficam em um patamar mais alto do que os dados reais e por isso tomamos como hipótese de que a crise foi significante. Consideramos os procedimentos sugeridos por Box e Tiao (1976) com a checagem do erro de previsão. 
-
-Seja a estatística 
-$$
-Q = \sum_{j=1}^m a_j^2/\hat{\sigma}_a^2
-$$
-onde $a_j = Z_j - \hat{Z}_{j-1}(1), j = 1, ..., m$. Sabemos que $Q$ seque uma distribuição $\chi^2(m)$ quando $m$ é grande. 
+Considere a estatística $$Q = \sum_{j=1}^m a_j^2/\hat{\sigma}_a^2$$ onde $a_j = Z_j - \hat{Z}_{j-1}(1), j = 1, ..., m$. Sabemos que $Q$ seque uma distribuição $\chi^2(m)$ quando $m$ é grande. 
 
 ```{r, echo=F}
 n = length(pre_intervention)
@@ -291,21 +288,18 @@ Q <- sum(a^2)/sigma2
 print(paste("Q = ", Q))
 ```
 
-Temos que o valor de $Q$ é suficientemente alto para que vejamos que de fato há efeito da crise sub-prime. 
-
-Podemos, então, partir para a modelagem da intervenção. 
+Temos que o valor de $Q$ é suficientemente alto para que vejamos que de fato há efeito da crise sub-prime. Podemos, então, partir para a modelagem da intervenção. 
 
 # Modelagem com intervenção 
 
-Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Suporemos que não hajam outras intervenções, como governamental, e elas devem ser incorporadas no modelo. Seja ele:
+Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Vamos supor que não haja outras intervenções, como governamental, e que elas devem ser incorporadas no modelo. Seja ele:
 
-$$
-u_t = \begin{cases}
-0, t < \text{julho 2018} \\
-\delta^k \omega_0, t = \text{julho 2008} + k, k = 0, 1, 2, ...
-\end{cases}
-$$
-Estimaremos em toda série esses parâmetros também ($\delta$ e $\omega_0$). 
+$$u_t = \begin{cases}
+0, &t < \text{jul 2018} \\
+\delta^k \omega_0, &t = \text{jul 2008} + k, \ \ k = 0, 1, 2, \cdots
+\end{cases}$$
+
+Estimaremos a série com intervenção, ou seja, também estimaremos os parâmetros $\delta$ e $\omega_0$.
 
 ```{r, echo=F}
 tbs_train.bc <- BoxCox(tbs_train, lambda = 0)
@@ -314,7 +308,7 @@ mod.arimax <- arimax(tbs_train.bc,
                      seasonal = c(0, 1, 1),
                      xtransf=data.frame(Crise=1*(seq(tbs_train)==(length(pre_intervention) + 1))),
                      transfer=list(c(1, 1)),
-                     method = "ML") # problemas com CSS-ML e CSS, porquê? 
+                     method = "ML") # problemas com CSS-ML e CSS, porquê?
 summary(mod.arimax)
 ```
 
@@ -325,7 +319,7 @@ par(mfrow = c(2,1))
 ggtsdisplay(mod.arimax$residuals)
 ```
 
-A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
+O resíduo não parece ser resultado de uma normal... A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
 
 ```{r, echo = F, warning = F, message=F}
 library(ggfortify)
@@ -336,3 +330,4 @@ autoplot(mod.arimax,
   ylab('Valores log') + xlab('Tempo') 
 ```
 
+Em geral o modelo parece capturar bem a intervenção.
