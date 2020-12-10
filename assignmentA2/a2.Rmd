@@ -276,9 +276,9 @@ Como o p-valor é pequeno, em particular $< 0.05$, rejeitamos a hipótese nula, 
 
 # Modelagem com intervenção 
 
-Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Vamos supor que não haja outras intervenções, como governamental, e que elas devem ser incorporadas no modelo. Se nossa série atual é $u_t$, vamos modelar $Z_t$:
+Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Vamos supor que não haja outras intervenções, como governamental, e que elas devem ser incorporadas no modelo. Se nossa série atual é $N_t$, vamos modelar $Z_t$:
 
-$$Z_t = v(B)X_t + u_t$$
+$$Z_t = v(B)X_t + N_t$$
 
 sendo $X_t$ ``temporário'' e $v(B) = \dfrac{\omega_0}{1 - \delta B}$. Portanto, 
 
@@ -294,7 +294,8 @@ tbs_train.bc <- BoxCox(tbs_train, lambda = 0)
 mod.arimax <- arimax(tbs_train.bc, 
                      order = c(2, 1, 0),
                      seasonal = c(0, 1, 1),
-                     xtransf=data.frame(Crise=1*(seq(tbs_train)==(length(pre_intervention) + 1))),
+                     xtransf=data.frame(Crise=1*
+                                          (seq(tbs_train)==(n + 1))),
                      transfer=list(c(1, 0)),
                      method = "ML")
 summary(mod.arimax)
@@ -303,7 +304,7 @@ summary(mod.arimax)
 Vamos ver como se comportam os resíduos do modelo. 
 
 ```{r, echo=F, warning=F}
-ggtsdisplay(mod.arimax$residuals)
+checkresiduals(mod.arimax)
 ```
 
 O resíduo não parece ser resultado de uma normal, pois justamente na intervenção há uma distorção bem grande. A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
@@ -327,7 +328,6 @@ Em geral o modelo parece capturar bem a intervenção.
 ```{r, echo=F}
 K <- length(tbs_test)
 ```
-
 
 Vamos agora realizar a previsão até 24 passos à frente. Para isso precisamos usar as estimativas de $\delta$ e $\omega_0$ dados pelo arimax e calculamos $h_t$. Esses valores são usados como regressores da função `Arima`, a qual podemos fazemos fazer predições. 
 
@@ -389,8 +389,8 @@ mod2.arimax <- arimax(tbs_train.bc,
                      order = c(2, 1, 0),
                      seasonal = c(0, 1, 1),
                      xtransf=data.frame(Crise=1*
-                                       ((seq(tbs_train) >= length(pre_intervention) + 1) &
-                                        seq(tbs_train) <= length(pre_intervention) + 1 + 6)),
+                                       ((seq(tbs_train) >= n + 1) &
+                                        seq(tbs_train) <= n + 1 + 6)),
                      transfer=list(c(1, 0)),
                      method = "ML")
 summary(mod2.arimax)
@@ -406,12 +406,49 @@ Visualmente, os resíduos se comportam de forma melhor que anteriormente: a dist
 Observamos um histograma razoável, porém ainda temos alguns picos na ACF.
 O teste de Ljung-Box rejeitou a hipótese de descorrelação, o que não é um bom sinal.
 
-Ainda assim, percebemos que esse modelo reflete melhor a intervenção na crise do subprime. Podemos conferir como o modelo se comporta com os daos reais. 
+Para tentar corrigir esses problemas, podemos testar um modelo um pouco mais complexo com um termo de média móvel na intervenção. 
+
+```{r, echo=F}
+mod3.arimax <- arimax(tbs_train.bc,
+                     order = c(2, 1, 0),
+                     seasonal = c(0, 1, 1),
+                     xtransf=data.frame(Crise=1*
+                                       ((seq(tbs_train) >= n + 1) &
+                                        seq(tbs_train) <= n + 1 + 6)),
+                     transfer=list(c(1, 1)),
+                     method = "ML")
+summary(mod3.arimax)
+checkresiduals(mod3.arimax)
+```
+
+Percebemos que esse modelo reflete a normalidade dos resíduos de forma melhor, pelo histograma. Ainda não foi possível retirar toda a autocorrelação do modelo, rejeitando a não existência de correlação nos dados pelo teste de Ljung-Box. Podemos, entretanto, comparar os erros dos três modelos. 
+
+```{r, echo = F}
+model.errors <- data.frame()
+model.errors <- rbind(model.errors, 
+                      error.metrics(tbs_train.bc, fitted(mod.arimax), 1))
+colnames(model.errors) <- c('Modelo', 'MAPE', 'MAE', 'RMSE')
+model.errors <- rbind(model.errors, 
+                      error.metrics(tbs_train.bc, fitted(mod2.arimax), 2))
+model.errors <- rbind(model.errors, 
+                      error.metrics(tbs_train.bc[-1], fitted(mod3.arimax)[-1], 3))
+
+p1 <- ggplot(model.errors, aes(x=Modelo, y=MAPE)) + 
+  geom_bar(stat = "identity")
+p2 <- ggplot(model.errors, aes(x=Modelo, y=RMSE)) + 
+  geom_bar(stat = "identity")
+p3 <- ggplot(model.errors, aes(x=Modelo, y=MAE)) + 
+  geom_bar(stat = "identity")
+
+gridExtra::grid.arrange(p1,p2,p3, nrow = 1, top = 'Métricas de Erro')
+```
+
+Nesse sentido, o terceiro modelo apresenta, nas três métricas, um resíduo menor e, por isso, ele melhor reflete a intervenção na crise do subprime. Podemos conferir como o modelo se comporta com os dados reais. 
 
 ```{r, echo = F, warning = F, message=F}
 x <- time(tbs_train.bc)
 tbs_train.bc_df <- data.frame(x = x, y = tbs_train.bc)
-fitted_model <- fitted(mod2.arimax)
+fitted_model <- fitted(mod3.arimax)
 
 ggplot(tbs_train.bc_df, aes(x,y)) + 
   geom_point() +
@@ -420,14 +457,17 @@ ggplot(tbs_train.bc_df, aes(x,y)) +
   ylab('Valores log') + xlab('Tempo') 
 ```
 
-# Previsão com o modelo de intervenção
+# Previsão com o segundo modelo de intervenção
 
 O gráfico abaixo nos permite visualizar a predição do modelo até até 24 passos à frente.
 
 ```{r, echo = F}
 k <- 6 # size of the effect 
-delta <- as.numeric(mod2.arimax$coef['Crise-AR1'])
-omega_0 <- as.numeric(mod2.arimax$coef['Crise-MA0'])
+
+delta <- as.numeric(mod3.arimax$coef['Crise-AR1'])
+omega_0 <- as.numeric(mod3.arimax$coef['Crise-MA0'])
+omega_1 <- as.numeric(mod3.arimax$coef['Crise-MA1'])
+
 tf.tmp <- tf <- rep(0, (n + m + K))
 for (i in 1:(m+K)){
   tf.tmp[(i+n)] <- delta^(i-1)
@@ -435,8 +475,12 @@ for (i in 1:(m+K)){
 for (i in 1:(m+K)){
   tf[(i+n)] <- sum(tf.tmp[(i+n-k):(i+n)])
 }
-tf <- omega_0*tf
-mod2.arima <- Arima(tbs_train, 
+tf <- (omega_0*delta + omega_1)*tf
+for (i in 1:k){
+  tf[(n+i)] <- tf[(n+i)] + omega_0 
+}
+
+mod3.arima <- Arima(tbs_train, 
                     order = c(2,1,0), 
                     seasonal = c(0,1,1),
                     lambda = 0,
@@ -444,7 +488,7 @@ mod2.arima <- Arima(tbs_train,
 ```
 
 ```{r, echo=F}
-autoplot(forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
+autoplot(forecast(mod3.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
          level = c(90, 95),
          main = "Total de vendas nos negócios",
          xlab = "Tempo",
@@ -454,7 +498,7 @@ autoplot(forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
 E o MAPE para o erro de previsão é o seguinte:
 
 ```{r, echo = F}
-mape(tbs_test, forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)])$mean)
+mape(tbs_test, forecast(mod3.arima, h=24, xreg = tf[(n+m+1):(n+m+K)])$mean)
 ```
 
-Percebemos que o MAPE de previsão é ligeiramente menor nesse modelo, e, portanto, o segundo modelo estimado ainda parece ter um bom comportamento. 
+Percebemos que o MAPE de previsão é bem maior do que o primeiro modelo e, portanto, não parece ter sido uma boa ideia para essa intervenção. 
