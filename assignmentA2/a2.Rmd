@@ -292,9 +292,13 @@ Temos que o valor de $Q$ é suficientemente alto para que vejamos que de fato h�
 
 # Modelagem com intervenção 
 
-Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Vamos supor que não haja outras intervenções, como governamental, e que elas devem ser incorporadas no modelo. Seja ele:
+Consideraremos o modelo de intervenção dado por uma série que muda de nível abruptamente, dado a quebra do sistema bancário que tem efeito rápido e com um decaímento do efeito exponencial, dado que a economia se autoregula. Vamos supor que não haja outras intervenções, como governamental, e que elas devem ser incorporadas no modelo. Se nossa série atual é $u_t$, vamos modelar $Z_t$:
 
-$$u_t = \begin{cases}
+$$Z_t = v(B)X_t + u_t$$
+
+sendo $X_t$ ``temporário'' e $v(B) = \dfrac{\omega_0}{1 - \delta B}$. Portanto, 
+
+$$h_t = v(B) X_t = \begin{cases}
 0, &t < \text{jul 2018} \\
 \delta^k \omega_0, &t = \text{jul 2008} + k, \ \ k = 0, 1, 2, \cdots
 \end{cases}$$
@@ -319,7 +323,7 @@ par(mfrow = c(2,1))
 ggtsdisplay(mod.arimax$residuals)
 ```
 
-O resíduo não parece ser resultado de uma normal... A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
+O resíduo não parece ser resultado de uma normal, pois justamente na intervenção há uma distorção bem grande. A ACF dos resíduos e a PACF estão com picos, o que indica que ainda existe uma correlação não capturada. Vamos ver como o modelo fitado se compara com os dados reais na escala log, dada a transformação BoxCox com $\lambda = 0$ que fizemos. 
 
 ```{r, echo = F, warning = F, message=F}
 library(ggfortify)
@@ -331,3 +335,95 @@ autoplot(mod.arimax,
 ```
 
 Em geral o modelo parece capturar bem a intervenção.
+
+# Previsão com o modelo de intervenção
+
+Vamos agora realizar a previsão até 24 passos à frente.
+
+```{r, echo = F}
+
+# https://stats.stackexchange.com/q/169564
+
+delta = as.numeric(mod.arimax$coef['Crise-AR1'])
+omega_0 = as.numeric(mod.arimax$coef['Crise-MA1'])
+tf = rep(0, length(pre_intervention))
+for (i in 1:length(pos_intervention)) {
+  tf = c(tf, delta^(i-1)*omega_0)
+}
+tf = tf*as.numeric(mod.arimax$coef['Crise-MA0'])
+mod.arima = Arima(tbs_train, 
+                order = c(2,1,0), 
+                seasonal = c(0,1,1),
+                lambda = 0,
+                xreg = tf)
+
+autoplot(forecast(mod.arima, h=24, xreg = rep(0, 24)),
+         level = c(90, 95),
+         main = "Total de vendas nos negócios",
+         xlab = "Tempo",
+         ylab = "Milhões de dólares")
+```
+
+Vamos verificar o MAPE da nossa previsão:
+
+```{r, echo = F}
+mape(tbs_test, forecast(mod.arima, h=24, xreg = rep(0, 24))$mean)
+```
+
+Nos parece um ótimo resultado.
+
+<!-- Porém, acreditamos que podemos melhorar. -->
+<!-- É óbvio que o efeito da intervenção não é permanente, por isso optamos pelo que chamamos de efeito temporário. -->
+<!-- Porém, observe que o efeito da intervenção também não é imediato: -->
+
+<!-- ```{r, echo = F} -->
+<!-- autoplot(window(tbs, start = c(2005, 1), end = c(2012,12)), main = "Total de vendas nos negócios",  -->
+<!--               xlab = "Tempo",  -->
+<!--               ylab = "Milhões de dólares") +  -->
+<!--   geom_vline(xintercept = as.Date("2008-07-01", "%Y-%m-%d"),  -->
+<!--              color = 'red',  -->
+<!--              linetype = "dashed", -->
+<!--              size = 0.5) + -->
+<!--   geom_vline(xintercept = as.Date("2009-01-01", "%Y-%m-%d"),  -->
+<!--              color = 'red',  -->
+<!--              linetype = "dashed", -->
+<!--              size = 0.5) -->
+<!-- ``` -->
+
+<!-- Isso nos indica que poderíamos considerar um efeito temporário, mas não imediato, de alguns meses. -->
+
+<!-- Vamos modelar a mesma intervenção, porém permitindo que ela dure mais tempo, por 6 meses (desde jul 2008 até dez 2008). -->
+
+<!-- ```{r, echo=F} -->
+<!-- mod2.arimax <- arimax(tbs_train.bc,  -->
+<!--                      order = c(2, 1, 0), -->
+<!--                      seasonal = c(0, 1, 1), -->
+<!--                      xtransf=data.frame(Crise=1* -->
+<!--                                           (seq(tbs_train) >= length(pre_intervention) + 1 &  -->
+<!--                                             seq(tbs_train) <= length(pre_intervention) + 1 + 6)), -->
+<!--                      transfer=list(c(1, 1)), -->
+<!--                      method = "ML") # problemas com CSS-ML e CSS, porquê? -->
+<!-- summary(mod2.arimax) -->
+<!-- ``` -->
+
+<!-- Vamos ver como se comportam os resíduos do modelo.  -->
+
+<!-- ```{r, echo=F, warning=F} -->
+<!-- par(mfrow = c(1,1)) -->
+<!-- checkresiduals(mod2.arimax) -->
+<!-- ``` -->
+
+<!-- Visualmente, os resíduos se comportam de forma melhor que anteriormente: a distorção na intervenção foi amenizada e a ACF de comporta melhor. -->
+<!-- Observamos um histograma razoável, porém ainda temos alguns picos na ACF. -->
+<!-- O teste de Ljung-Box rejeitou a hipótese de descorrelação, o que não é um bom sinal. -->
+
+<!-- Ainda assim, percebemos que esse modelo reflete melhor a intervenção na crise do subprime. -->
+
+<!-- # Previsão com o modelo de intervenção -->
+
+<!-- O gráfico abaixo nos permite visualizar a predição do modelo até até 24 passos à frente. -->
+
+<!-- ```{r, echo = F} -->
+
+<!-- ``` -->
+
