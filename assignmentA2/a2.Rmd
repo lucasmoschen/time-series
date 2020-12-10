@@ -15,20 +15,6 @@ library(tseries)
 library(Metrics)
 ```
 
-# TODO
-
-(DONE) 1. Fazer o processo de identificação manualmente para obter a primeira opção de modelo (mostrar que aprendemos isso).
-
-(DONE) 2. Usar auto.arima para um segundo modelo. Se eles forem diferentes (o drift faz variar), comparamos os modelos usando checkresiduals. Escolher o "melhor modelo"
-
-(DONE) 3. Fazer previsões do modelo e comparar com pósintervenção. Vamos comparar com a realidade e verificar que de fato houve efeito. 
-
-4. Fitar o modelo em todos os dados: propor um modelo para a crise (talvez dois e repetir a escolha do melhor?)
-
-5. Fazemos as previsões e avaliamos o modelo no teste (podemos comparar com um naive). 
-
-Obs.: Esses 5 passos combrem a Metodologia, mas podemos adicionar algumas cerejas para deixar mais rico, dependendo do tempo. 
-
 # Dados
 
 A série temporal a seguir é o total de vendas mensais nos negócios em milhões de dólares, obtido em [Fred, Federal Reserve Bank of St. Louis](https://fred.stlouisfed.org/series/TOTBUSSMNSA). A janela de observações está entre Janeiro de 2002 e Dezembro de 2014. Os últimos dois anos serão utilizados para a validação do modelo de previsão. 
@@ -359,7 +345,7 @@ mod.arima = Arima(tbs_train,
                 xreg = tf[1:(n+m)])
 ```
 
-```{r}
+```{r, echo=F}
 autoplot(forecast(mod.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
          level = c(90, 95),
          main = "Total de vendas nos negócios",
@@ -457,7 +443,7 @@ mod2.arima <- Arima(tbs_train,
                     xreg = tf[1:(n+m)])
 ```
 
-```{r}
+```{r, echo=F}
 autoplot(forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
          level = c(90, 95),
          main = "Total de vendas nos negócios",
