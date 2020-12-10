@@ -338,24 +338,29 @@ Em geral o modelo parece capturar bem a intervenção.
 
 # Previsão com o modelo de intervenção
 
+```{r, echo=F}
+K <- length(tbs_test)
+```
+
+
 Vamos agora realizar a previsão até 24 passos à frente. Para isso precisamos usar as estimativas de $\delta$ e $\omega_0$ dados pelo arimax e calculamos $h_t$. Esses valores são usados como regressores da função `Arima`, a qual podemos fazemos fazer predições. 
 
 ```{r, echo = F}
 delta <- as.numeric(mod.arimax$coef['Crise-AR1'])
 omega_0 <- as.numeric(mod.arimax$coef['Crise-MA0'])
-tf <- rep(0, (n + m))
-for (i in 1:m) {
+tf <- rep(0, (n + m + K))
+for (i in 1:(m+K)){
   tf[i+n] <- delta^(i-1)*omega_0
 }
 mod.arima = Arima(tbs_train, 
                 order = c(2,1,0), 
                 seasonal = c(0,1,1),
                 lambda = 0,
-                xreg = tf)
+                xreg = tf[1:(n+m)])
 ```
 
 ```{r}
-autoplot(forecast(mod.arima, h=24, xreg = rep(0, 24)),
+autoplot(forecast(mod.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
          level = c(90, 95),
          main = "Total de vendas nos negócios",
          xlab = "Tempo",
@@ -365,63 +370,101 @@ autoplot(forecast(mod.arima, h=24, xreg = rep(0, 24)),
 Vamos verificar o MAPE da nossa previsão, comparando com os dados reais de teste:
 
 ```{r, echo = F}
-mape(tbs_test, forecast(mod.arima, h=24, xreg = rep(0, 24))$mean)
+mape(tbs_test, forecast(mod.arima, h=24, xreg = tf[(n+m+1):(n+m+K)])$mean)
 ```
 
 Nos parece um ótimo resultado.
 
-<!-- Porém, acreditamos que podemos melhorar. -->
-<!-- É óbvio que o efeito da intervenção não é permanente, por isso optamos pelo que chamamos de efeito temporário. -->
-<!-- Porém, observe que o efeito da intervenção também não é imediato: -->
+Porém, acreditamos que podemos melhorar.
+É óbvio que o efeito da intervenção não é permanente, por isso optamos pelo que chamamos de efeito temporário.
+Porém, observe que o efeito da intervenção também não é imediato:
 
-<!-- ```{r, echo = F} -->
-<!-- autoplot(window(tbs, start = c(2005, 1), end = c(2012,12)), main = "Total de vendas nos negócios",  -->
-<!--               xlab = "Tempo",  -->
-<!--               ylab = "Milhões de dólares") +  -->
-<!--   geom_vline(xintercept = as.Date("2008-07-01", "%Y-%m-%d"),  -->
-<!--              color = 'red',  -->
-<!--              linetype = "dashed", -->
-<!--              size = 0.5) + -->
-<!--   geom_vline(xintercept = as.Date("2009-01-01", "%Y-%m-%d"),  -->
-<!--              color = 'red',  -->
-<!--              linetype = "dashed", -->
-<!--              size = 0.5) -->
-<!-- ``` -->
+```{r, echo = F}
+autoplot(window(tbs, start = c(2005, 1), end = c(2012,12)), 
+         main = "Total de vendas nos negócios",
+         xlab = "Tempo",
+         ylab = "Milhões de dólares") +
+  geom_vline(xintercept = 2008 + 7/12,
+             color = 'red',
+             linetype = "dashed",
+             size = 0.5) +
+  geom_vline(xintercept = 2009,
+             color = 'red',
+             linetype = "dashed",
+             size = 0.5)
+```
 
-<!-- Isso nos indica que poderíamos considerar um efeito temporário, mas não imediato, de alguns meses. -->
+Isso nos indica que poderíamos considerar um efeito temporário, mas não imediato, de alguns meses.
 
-<!-- Vamos modelar a mesma intervenção, porém permitindo que ela dure mais tempo, por 6 meses (desde jul 2008 até dez 2008). -->
+Vamos modelar a mesma intervenção, porém permitindo que ela dure mais tempo, por 6 meses (desde jul 2008 até dez 2008).
 
-<!-- ```{r, echo=F} -->
-<!-- mod2.arimax <- arimax(tbs_train.bc,  -->
-<!--                      order = c(2, 1, 0), -->
-<!--                      seasonal = c(0, 1, 1), -->
-<!--                      xtransf=data.frame(Crise=1* -->
-<!--                                           (seq(tbs_train) >= length(pre_intervention) + 1 &  -->
-<!--                                             seq(tbs_train) <= length(pre_intervention) + 1 + 6)), -->
-<!--                      transfer=list(c(1, 1)), -->
-<!--                      method = "ML") # problemas com CSS-ML e CSS, porquê? -->
-<!-- summary(mod2.arimax) -->
-<!-- ``` -->
+```{r, echo=F}
+mod2.arimax <- arimax(tbs_train.bc,
+                     order = c(2, 1, 0),
+                     seasonal = c(0, 1, 1),
+                     xtransf=data.frame(Crise=1*
+                                       (seq(tbs_train) >= length(pre_intervention) + 1 &
+                                        seq(tbs_train) <= length(pre_intervention) + 1 + 6)),
+                     transfer=list(c(1, 1)),
+                     method = "ML")
+summary(mod2.arimax)
+```
 
-<!-- Vamos ver como se comportam os resíduos do modelo.  -->
+Vamos ver como se comportam os resíduos do modelo.
 
-<!-- ```{r, echo=F, warning=F} -->
-<!-- par(mfrow = c(1,1)) -->
-<!-- checkresiduals(mod2.arimax) -->
-<!-- ``` -->
+```{r, echo=F, warning=F}
+checkresiduals(mod2.arimax)
+```
 
-<!-- Visualmente, os resíduos se comportam de forma melhor que anteriormente: a distorção na intervenção foi amenizada e a ACF de comporta melhor. -->
-<!-- Observamos um histograma razoável, porém ainda temos alguns picos na ACF. -->
-<!-- O teste de Ljung-Box rejeitou a hipótese de descorrelação, o que não é um bom sinal. -->
+Visualmente, os resíduos se comportam de forma melhor que anteriormente: a distorção na intervenção foi amenizada e a ACF se comporta melhor.
+Observamos um histograma razoável, porém ainda temos alguns picos na ACF.
+O teste de Ljung-Box rejeitou a hipótese de descorrelação, o que não é um bom sinal.
 
-<!-- Ainda assim, percebemos que esse modelo reflete melhor a intervenção na crise do subprime. -->
+Ainda assim, percebemos que esse modelo reflete melhor a intervenção na crise do subprime. Podemos conferir como o modelo se comporta com os daos reais. 
 
-<!-- # Previsão com o modelo de intervenção -->
+```{r, echo = F, warning = F, message=F}
+x <- time(tbs_train.bc)
+tbs_train.bc_df <- data.frame(x = x, y = tbs_train.bc)
+fitted_model <- fitted(mod2.arimax)
 
-<!-- O gráfico abaixo nos permite visualizar a predição do modelo até até 24 passos à frente. -->
+ggplot(tbs_train.bc_df, aes(x,y)) + 
+  geom_point() +
+  geom_line(aes(x, fitted_model), colour = 'blue') + 
+  ggtitle("Comparação dos dados reais com o modelo") + 
+  ylab('Valores log') + xlab('Tempo') 
+```
 
-<!-- ```{r, echo = F} -->
+# Previsão com o modelo de intervenção
 
-<!-- ``` -->
+O gráfico abaixo nos permite visualizar a predição do modelo até até 24 passos à frente.
 
+```{r, echo = F}
+delta <- as.numeric(mod2.arimax$coef['Crise-AR1'])
+omega_0 <- as.numeric(mod2.arimax$coef['Crise-MA0'])
+tf <- rep(0, (n + m + K))
+for (i in 1:(m+K)){
+  tf[i+n] <- delta^(i-1)
+}
+tf <- omega_0*cumsum(tf)
+mod2.arima <- Arima(tbs_train, 
+                    order = c(2,1,0), 
+                    seasonal = c(0,1,1),
+                    lambda = 0,
+                    xreg = tf[1:(n+m)])
+```
+
+```{r}
+autoplot(forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)]),
+         level = c(90, 95),
+         main = "Total de vendas nos negócios",
+         xlab = "Tempo",
+         ylab = "Milhões de dólares")
+```
+
+E o MAPE para o erro de previsão é o seguinte:
+
+```{r, echo = F}
+mape(tbs_test, forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)])$mean)
+```
+
+Percebemos que o MAPE de previsão é ligeiramente maior nesse modelo, e, portanto, o primeiro modelo estimado ainda parece ter um bom comportamento. 
