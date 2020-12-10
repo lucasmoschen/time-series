@@ -442,9 +442,12 @@ O gráfico abaixo nos permite visualizar a predição do modelo até até 24 pas
 k <- 6 # size of the effect 
 delta <- as.numeric(mod2.arimax$coef['Crise-AR1'])
 omega_0 <- as.numeric(mod2.arimax$coef['Crise-MA0'])
-tf <- rep(0, (n + m + K))
+tf.tmp <- tf <- rep(0, (n + m + K))
 for (i in 1:(m+K)){
-  tf[i+n] <- delta^(i-1) + tf[(i+n-1)] - tf[(i+n-k-1)]
+  tf.tmp[(i+n)] <- delta^(i-1)
+}
+for (i in 1:(m+K)){
+  tf[(i+n)] <- sum(tf.tmp[(i+n-k):(i+n)])
 }
 tf <- omega_0*tf
 mod2.arima <- Arima(tbs_train, 
@@ -468,4 +471,4 @@ E o MAPE para o erro de previsão é o seguinte:
 mape(tbs_test, forecast(mod2.arima, h=24, xreg = tf[(n+m+1):(n+m+K)])$mean)
 ```
 
-Percebemos que o MAPE de previsão é ligeiramente maior nesse modelo, e, portanto, o primeiro modelo estimado ainda parece ter um bom comportamento. 
+Percebemos que o MAPE de previsão é ligeiramente menor nesse modelo, e, portanto, o segundo modelo estimado ainda parece ter um bom comportamento. 
