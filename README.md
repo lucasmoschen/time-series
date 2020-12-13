@@ -9,6 +9,15 @@ some theorical questions.
 The homeworks and assigments are coded in R language and the presentations and
 texts are in portuguese. If requested, the author can translate it. 
 
+## R programming 
+
+R is the classic programming language for statistics. It has some limitations
+when compared to other languages, but some packages make it more worthy, as: 
+
+1. `ggplot`: best tool for plotting in R
+2. `tseries` and `zoo`: good for dealing more easily with time series. 
+3. `forecast`: the best when we speak about estimation and predictions of the models. 
+
 ## Homework 1 
 
 A pratical study of Car's Sales in Norway. In this study we practice the
@@ -59,12 +68,34 @@ For each considered model, we studied the residuals of the estimated model.
 
 ## Homework 4 
 
+We used the method Box-Jenkins in order to understand a time series as an
+ARIMA model. We can summarize it as: 
 
+1. Box-Cox transformation to stabilize the variance. 
+2. Identify the $ARIMA(p,d,q)$ model: 
+   1. Check the stationarity of the series with ADF test and differentiate  if
+   necessary ($d$ times)
+   2. Visualize the ACF and PACF of the data. 
+   3. Compare AIC, BIC and AICc information and select $p$ and $q$. 
+3. Estimation of the parameters of the model through maximum likelihood. 
+4. Diagnose the residuals (remainder of the fitting): 
+   1. Visualize the residuals.
+   2. Plot histogram, autocorrelation and partial autocorrelation. 
+   3. Ljung-Box's test for de-correlation and Jarque-Bera's test for kurtosis
+      and skewness' normality. 
 
 ## Homework 5 
 
+More exercises about transformation of a time series. We study the Box-Jenkins
+method considering seasonality. In this case, it's important to use
+Kruskal-Wallis test for seasonality and differentiate $D$ times considering
+this. The information criterion and ACF can be used as well. As example, we
+used the expenses in coffees, restaurants and other in Australia. 
 
+![eating Australia](images/eating_hw5.png)
 
+## Assignments 
 
-
+The assigments are application of this methods in more difficult series. It's
+suggested to have a look in the pdfs available in the assigment's folder. 
 
