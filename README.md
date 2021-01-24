@@ -1,10 +1,10 @@
 # Time Series 
 
-Time series is a series of data points indexed in time order. Mathematically,
+Time series is a sequence of data points indexed in time order. Mathematically,
 a time series is a stochastic process with a discrete-time observation
-support. In this repository, we study several topics included in this topic,
-as ARIMA models, trend and seasonality. Each homework has a pratical study and
-some theorical questions. 
+support. In this repository, we study several topics, such
+as ARIMA models, trend and seasonality. Each homework has a practical simulation and
+some theoretical questions. 
 
 The homeworks and assigments are coded in R language and the presentations and
 texts are in portuguese. If requested, the author can translate it. 
